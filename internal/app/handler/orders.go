@@ -30,7 +30,10 @@ func (h *Handler) userOrdersPostHandler(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, "unvalid order number", http.StatusUnprocessableEntity)
 		return
 	}
-	OrderReq(number)
+	err = OrderReq(number)
+	if err != nil {
+		fmt.Println(err)
+	}
 
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusAccepted)
