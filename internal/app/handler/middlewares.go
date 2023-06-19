@@ -6,6 +6,8 @@ import (
 	"strings"
 )
 
+var userIDkey string = "userID"
+
 func (h *Handler) userIdentity(v http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		header := r.Header.Get("Authorization")
@@ -26,7 +28,7 @@ func (h *Handler) userIdentity(v http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		h.ctx = context.WithValue(h.ctx, "userID", userID)
+		h.ctx = context.WithValue(h.ctx, userIDkey, userID)
 		v.ServeHTTP(w, r)
 	})
 }

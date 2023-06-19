@@ -3,14 +3,12 @@ module github.com/gogapopp/gophermart
 go 1.20
 
 require (
+	github.com/go-resty/resty/v2 v2.7.0
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/jackc/pgx/v5 v5.4.0
 )
 
-require (
-	github.com/go-resty/resty/v2 v2.7.0 // indirect
-	golang.org/x/net v0.10.0 // indirect
-)
+require golang.org/x/net v0.10.0 // indirect
 
 require (
 	github.com/go-chi/chi v1.5.4

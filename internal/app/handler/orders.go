@@ -14,6 +14,7 @@ import (
 
 // userOrdersPostHandler загружает номер заказа пользователя для расчёта
 func (h *Handler) userOrdersPostHandler(w http.ResponseWriter, r *http.Request) {
+	h.log.Info("userOrdersPostHandler called")
 	userID := h.ctx.Value("userID")
 
 	body, err := io.ReadAll(r.Body)
@@ -34,6 +35,7 @@ func (h *Handler) userOrdersPostHandler(w http.ResponseWriter, r *http.Request) 
 	if err != nil {
 		fmt.Println(err)
 	}
+	h.log.Info(Order)
 
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusAccepted)
@@ -42,6 +44,8 @@ func (h *Handler) userOrdersPostHandler(w http.ResponseWriter, r *http.Request) 
 
 // userOrdersGetHandler  получает список загруженных пользователем номеров заказов, статусов их обработки и информации о начислениях
 func (h *Handler) userOrdersGetHandler(w http.ResponseWriter, r *http.Request) {
+	h.log.Info("userOrdersGetHandler called")
+
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusAccepted)
 	fmt.Fprint(w, "orders list")
@@ -71,6 +75,8 @@ func checksum(number int) int {
 	return luhn % 10
 }
 
+var Order models.Order
+
 func OrderReq(number int) error {
 	client := resty.New()
 
@@ -82,14 +88,15 @@ func OrderReq(number int) error {
 	}
 
 	if resp.IsSuccess() {
-		var order models.Order
-		err = json.Unmarshal(resp.Body(), &order)
+		err = json.Unmarshal(resp.Body(), &Order)
 		if err != nil {
 			return err
 		}
-		fmt.Printf("Order: %d\n", order.Number)
-		fmt.Printf("Status: %s\n", order.Status)
-		fmt.Printf("Accrual: %d\n", order.Accrual)
+		fmt.Printf("Order: %d\n", Order.Number)
+		fmt.Printf("Status: %s\n", Order.Status)
+		fmt.Printf("Accrual: %d\n", Order.Accrual)
+		fmt.Printf("Status: %s\n", Order.Status)
+		fmt.Printf("Error: %s\n", resp.Status())
 	} else {
 		fmt.Printf("Error: %s\n", resp.Status())
 	}
