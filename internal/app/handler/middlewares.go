@@ -6,7 +6,9 @@ import (
 	"strings"
 )
 
-var userIDkey string = "userID"
+type ctxKey string
+
+var userIDkey ctxKey = "userID"
 
 func (h *Handler) userIdentity(v http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

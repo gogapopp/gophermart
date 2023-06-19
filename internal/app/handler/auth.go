@@ -15,7 +15,7 @@ var pgErr *pgconn.PgError
 
 // userRegisterHandler регистрирует пользователя
 func (h *Handler) userRegisterHandler(w http.ResponseWriter, r *http.Request) {
-	h.log.Info("userRegisterHandler called")
+	h.log.Info("POST /api/user/register")
 	var req models.User
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "error decoding request body", http.StatusBadRequest)
@@ -44,7 +44,7 @@ func (h *Handler) userRegisterHandler(w http.ResponseWriter, r *http.Request) {
 
 // userLoginHandler аутентифицирует пользователя
 func (h *Handler) userLoginHandler(w http.ResponseWriter, r *http.Request) {
-	h.log.Info("userLoginHandler called")
+	h.log.Info("POST /api/user/login")
 	var req models.User
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "error decoding request body", http.StatusBadRequest)

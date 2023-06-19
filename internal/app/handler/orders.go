@@ -14,7 +14,6 @@ import (
 
 // userOrdersPostHandler загружает номер заказа пользователя для расчёта
 func (h *Handler) userOrdersPostHandler(w http.ResponseWriter, r *http.Request) {
-	h.log.Info("userOrdersPostHandler called")
 	userID := h.ctx.Value("userID")
 
 	body, err := io.ReadAll(r.Body)
@@ -35,7 +34,13 @@ func (h *Handler) userOrdersPostHandler(w http.ResponseWriter, r *http.Request) 
 	if err != nil {
 		fmt.Println(err)
 	}
-	h.log.Info(Order)
+	h.log.Info("POST /api/user/orders",
+		"Order ID", Order.ID,
+		"Order Number", Order.Number,
+		"Order Status", Order.Status,
+		"Order Accrual", Order.Accrual,
+		"Order UploadedAt", Order.UploadedAt,
+	)
 
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusAccepted)
@@ -92,13 +97,6 @@ func OrderReq(number int) error {
 		if err != nil {
 			return err
 		}
-		fmt.Printf("Order: %d\n", Order.Number)
-		fmt.Printf("Status: %s\n", Order.Status)
-		fmt.Printf("Accrual: %d\n", Order.Accrual)
-		fmt.Printf("Status: %s\n", Order.Status)
-		fmt.Printf("Error: %s\n", resp.Status())
-	} else {
-		fmt.Printf("Error: %s\n", resp.Status())
 	}
 	return nil
 }
