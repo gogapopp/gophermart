@@ -16,7 +16,7 @@ const (
 )
 
 type tokenClaims struct {
-	jwt.StandardClaims
+	jwt.RegisteredClaims
 	UserID int `json:"id"`
 }
 
@@ -40,8 +40,8 @@ func (s *AuthService) GenerateToken(login, password string) (string, error) {
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, &tokenClaims{
-		jwt.StandardClaims{
-			IssuedAt: time.Now().Unix(),
+		jwt.RegisteredClaims{
+			IssuedAt: jwt.NewNumericDate(time.Now()),
 		},
 		user.ID,
 	})

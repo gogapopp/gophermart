@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -32,14 +33,17 @@ func (h *Handler) userOrdersPostHandler(w http.ResponseWriter, r *http.Request) 
 	}
 	err = OrderReq(number)
 	if err != nil {
-		fmt.Println(err)
+		h.log.Info("GET /api/orders/{number} ",
+			"err ", err,
+		)
+		log.Fatal(err)
 	}
 	h.log.Info("POST /api/user/orders",
-		"Order ID", Order.ID,
-		"Order Number", Order.Number,
-		"Order Status", Order.Status,
-		"Order Accrual", Order.Accrual,
-		"Order UploadedAt", Order.UploadedAt,
+		"Order ID ", Order.ID,
+		"Order Number ", Order.Number,
+		"Order Status ", Order.Status,
+		"Order Accrual ", Order.Accrual,
+		"Order UploadedAt ", Order.UploadedAt,
 	)
 
 	w.Header().Set("Content-Type", "text/plain")
@@ -49,7 +53,7 @@ func (h *Handler) userOrdersPostHandler(w http.ResponseWriter, r *http.Request) 
 
 // userOrdersGetHandler  получает список загруженных пользователем номеров заказов, статусов их обработки и информации о начислениях
 func (h *Handler) userOrdersGetHandler(w http.ResponseWriter, r *http.Request) {
-	h.log.Info("userOrdersGetHandler called")
+	h.log.Info("GET /api/user/orders")
 
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusAccepted)
