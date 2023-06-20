@@ -1,8 +1,8 @@
 package service
 
 import (
+	"github.com/gogapopp/gophermart/internal/app/models"
 	"github.com/gogapopp/gophermart/internal/app/storage"
-	"github.com/gogapopp/gophermart/models"
 )
 
 type Auth interface {
@@ -12,6 +12,8 @@ type Auth interface {
 }
 
 type Orders interface {
+	Create(userID int, order models.Order) (int, error)
+	GetUserOrders(userID int) ([]models.Order, error)
 }
 
 type Balance interface {
@@ -25,6 +27,7 @@ type Service struct {
 
 func NewService(storage *storage.Storage) *Service {
 	return &Service{
-		Auth: NewAuthService(storage.Auth),
+		Auth:   NewAuthService(storage.Auth),
+		Orders: NewUserOrders(storage.Orders),
 	}
 }

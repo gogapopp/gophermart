@@ -9,7 +9,9 @@ import (
 )
 
 const (
-	userTable = "users"
+	usersTable       = "users"
+	ordersTable      = "orders"
+	usersOrdersTable = "users_orders"
 )
 
 func NewDB(ctx context.Context, dsn string) (*sql.DB, error) {
@@ -46,7 +48,7 @@ func NewDB(ctx context.Context, dsn string) (*sql.DB, error) {
 			number int,
 			status varchar(256),
 			accrual decimal,
-			uploaded_at varchar(256)
+			uploaded_at timestamptz
 		)
 	`)
 	if err != nil {

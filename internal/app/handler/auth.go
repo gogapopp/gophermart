@@ -6,15 +6,12 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/gogapopp/gophermart/internal/app/models"
 	"github.com/gogapopp/gophermart/internal/app/storage"
-	"github.com/gogapopp/gophermart/models"
-	"github.com/jackc/pgx/v5/pgconn"
 )
 
-var pgErr *pgconn.PgError
-
 // userRegisterHandler регистрирует пользователя
-func (h *Handler) userRegisterHandler(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) userRegisterPostHandler(w http.ResponseWriter, r *http.Request) {
 	h.log.Info("POST /api/user/register")
 	var req models.User
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -43,7 +40,7 @@ func (h *Handler) userRegisterHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // userLoginHandler аутентифицирует пользователя
-func (h *Handler) userLoginHandler(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) userLoginPostHandler(w http.ResponseWriter, r *http.Request) {
 	h.log.Info("POST /api/user/login")
 	var req models.User
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {

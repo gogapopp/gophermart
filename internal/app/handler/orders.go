@@ -2,20 +2,21 @@ package handler
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/gogapopp/gophermart/config"
-	"github.com/gogapopp/gophermart/models"
+	"github.com/gogapopp/gophermart/internal/app/models"
 )
 
 // userOrdersPostHandler загружает номер заказа пользователя для расчёта
 func (h *Handler) userOrdersPostHandler(w http.ResponseWriter, r *http.Request) {
-	userID := h.ctx.Value("userID")
+	userID := r.Context().Value(userIDkey).(int)
 
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -31,33 +32,54 @@ func (h *Handler) userOrdersPostHandler(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, "unvalid order number", http.StatusUnprocessableEntity)
 		return
 	}
-	err = OrderReq(number)
+	order, err := OrderReq(number)
 	if err != nil {
-		h.log.Info("GET /api/orders/{number} ",
-			"err ", err,
-		)
-		log.Fatal(err)
+		if errors.As(err, &pgErr) {
+			http.Error(w, "order already exists", http.StatusConflict)
+			return
+		} else if errors.Is(err, ErrTooManyRequests) {
+			http.Error(w, "too many requests", http.StatusTooManyRequests)
+			return
+		} else {
+			http.Error(w, "service reject", http.StatusInternalServerError)
+			return
+		}
 	}
-	h.log.Info("POST /api/user/orders",
-		"Order ID ", Order.ID,
-		"Order Number ", Order.Number,
-		"Order Status ", Order.Status,
-		"Order Accrual ", Order.Accrual,
-		"Order UploadedAt ", Order.UploadedAt,
+	Order := models.Order{
+		Number:     number,
+		Status:     order.Status,
+		Accrual:    order.Accrual,
+		UploadedAt: time.Now().Format(time.RFC3339),
+	}
+	orderID, err := h.services.Orders.Create(userID, Order)
+	h.log.Infoln("POST /api/user/orders",
+		fmt.Sprintf("Orders struct:"),
+		fmt.Sprintf("Number %d", order.Number),
+		fmt.Sprintf("Status %s", order.Status),
+		fmt.Sprintf("Accrual %f", order.Accrual),
+		fmt.Sprintf("orderID %d", orderID),
 	)
-
-	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusAccepted)
-	fmt.Fprintf(w, "download order, userID: %d: %d", userID, number)
 }
 
 // userOrdersGetHandler  получает список загруженных пользователем номеров заказов, статусов их обработки и информации о начислениях
 func (h *Handler) userOrdersGetHandler(w http.ResponseWriter, r *http.Request) {
 	h.log.Info("GET /api/user/orders")
+	userID := r.Context().Value(userIDkey).(int)
 
-	w.Header().Set("Content-Type", "text/plain")
+	orders, err := h.services.Orders.GetUserOrders(userID)
+	if err != nil {
+		h.log.Infoln("get error: ", err)
+		http.Error(w, "error get user orders", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusAccepted)
-	fmt.Fprint(w, "orders list")
+	if err := json.NewEncoder(w).Encode(orders); err != nil {
+		http.Error(w, "error encoding response", http.StatusInternalServerError)
+		return
+	}
 }
 
 // Valid check number is valid or not based on Luhn algorithm
@@ -84,23 +106,29 @@ func checksum(number int) int {
 	return luhn % 10
 }
 
-var Order models.Order
+type RespOrder struct {
+	Number  int     `json:"order"`
+	Status  string  `json:"status"`
+	Accrual float64 `json:"accrual"`
+}
 
-func OrderReq(number int) error {
+func OrderReq(number int) (RespOrder, error) {
+	var Order RespOrder
 	client := resty.New()
-
 	url := fmt.Sprintf("%s/api/orders/%d", config.AccSysAddr, number)
 
 	resp, err := client.R().Get(url)
 	if err != nil {
-		return err
+		return Order, err
 	}
 
-	if resp.IsSuccess() {
+	if resp.StatusCode() == http.StatusOK {
 		err = json.Unmarshal(resp.Body(), &Order)
 		if err != nil {
-			return err
+			return Order, err
 		}
+	} else if resp.StatusCode() == http.StatusTooManyRequests {
+		return Order, ErrTooManyRequests
 	}
-	return nil
+	return Order, err
 }

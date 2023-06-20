@@ -29,7 +29,7 @@ func main() {
 
 	storage := storage.NewStorage(ctx, db)
 	services := service.NewService(storage)
-	handlers := handler.NewHandler(ctx, services, log)
+	handlers := handler.NewHandler(services, log)
 
 	srv := server.NewServer(log)
 	if err := srv.Run(handlers.InitRoutes()); err != nil {

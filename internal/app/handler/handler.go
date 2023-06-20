@@ -1,34 +1,35 @@
 package handler
 
 import (
-	"context"
 	"net/http"
 
 	"github.com/go-chi/chi"
 	"github.com/gogapopp/gophermart/internal/app/service"
+	"github.com/jackc/pgx/v5/pgconn"
 	"go.uber.org/zap"
 )
 
+var pgErr *pgconn.PgError
+
 type Handler struct {
-	ctx      context.Context
 	services *service.Service
 	log      *zap.SugaredLogger
 }
 
-func NewHandler(ctx context.Context, services *service.Service, log *zap.SugaredLogger) *Handler {
-	return &Handler{ctx: ctx, services: services, log: log}
+func NewHandler(services *service.Service, log *zap.SugaredLogger) *Handler {
+	return &Handler{services: services, log: log}
 }
 
 func (h *Handler) InitRoutes() *chi.Mux {
 	r := chi.NewRouter()
 
-	r.Post("/api/user/register", h.userRegisterHandler)
-	r.Post("/api/user/login", h.userLoginHandler)
+	r.Post("/api/user/register", h.userRegisterPostHandler)
+	r.Post("/api/user/login", h.userLoginPostHandler)
 	r.Post("/api/user/orders", h.userIdentity(h.userOrdersPostHandler))
-	r.Get("/api/user/orders", h.userOrdersGetHandler)
+	r.Get("/api/user/orders", h.userIdentity(h.userOrdersGetHandler))
 	r.Get("/api/user/balance", h.userBalanceGetHanlder)
-	r.Post("/api/user/balance/withdraw", h.userBalanceWithdrawHanlder)
-	r.Get("/api/user/withdrawals", h.userBalanceWithdrawalsHanlder)
+	r.Post("/api/user/balance/withdraw", h.userBalanceWithdrawPostHanlder)
+	r.Get("/api/user/withdrawals", h.userBalanceWithdrawalsGetHanlder)
 	r.NotFound(http.NotFound)
 
 	return r

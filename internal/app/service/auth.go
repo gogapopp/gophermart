@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/gogapopp/gophermart/internal/app/models"
 	"github.com/gogapopp/gophermart/internal/app/storage"
-	"github.com/gogapopp/gophermart/models"
 	"github.com/golang-jwt/jwt/v4"
 )
 

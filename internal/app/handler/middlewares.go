@@ -10,7 +10,7 @@ type ctxKey string
 
 var userIDkey ctxKey = "userID"
 
-func (h *Handler) userIdentity(v http.HandlerFunc) http.HandlerFunc {
+func (h *Handler) userIdentity(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		header := r.Header.Get("Authorization")
 		if header == "" {
@@ -30,7 +30,7 @@ func (h *Handler) userIdentity(v http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		h.ctx = context.WithValue(h.ctx, userIDkey, userID)
-		v.ServeHTTP(w, r)
+		r = r.WithContext(context.WithValue(r.Context(), userIDkey, userID))
+		next(w, r)
 	})
 }
