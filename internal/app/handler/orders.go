@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/go-resty/resty/v2"
+	"github.com/gogapopp/gophermart/config"
 	"github.com/gogapopp/gophermart/internal/app/models"
 	"github.com/gogapopp/gophermart/internal/app/storage"
 )
@@ -52,22 +53,28 @@ func (h *Handler) userOrdersPostHandler(w http.ResponseWriter, r *http.Request) 
 		Accrual:    order.Accrual,
 		UploadedAt: time.Now().Format(time.RFC3339),
 	}
-	orderID, err := h.services.Orders.Create(userID, Order)
+
+	err = h.services.Orders.CheckUserOrder(userID, Order)
+	if err != nil {
+		if errors.Is(err, storage.ErrUserRepeatValue) {
+			http.Error(w, "user order already exist", http.StatusOK)
+			return
+		} else if errors.Is(err, storage.ErrRepeatValue) {
+			http.Error(w, "order already exist", http.StatusConflict)
+			return
+		}
+		http.Error(w, "error check user order", http.StatusInternalServerError)
+		return
+	}
+
+	_, err = h.services.Orders.Create(userID, Order)
 	if err != nil {
 		if errors.Is(err, storage.ErrRepeatValue) {
-			http.Error(w, "order already exist", http.StatusOK)
+			http.Error(w, "order already exist", http.StatusConflict)
 			return
 		}
 		log.Fatal(err)
 	}
-	fmt.Println(orderID)
-	h.log.Infoln("POST /api/user/orders",
-		fmt.Sprintf("Orders struct:"),
-		fmt.Sprintf("Number %s", order.Number),
-		fmt.Sprintf("Status %s", order.Status),
-		fmt.Sprintf("Accrual %f", order.Accrual),
-		fmt.Sprintf("orderID %d", orderID),
-	)
 	w.WriteHeader(http.StatusAccepted)
 }
 
@@ -78,34 +85,16 @@ func (h *Handler) userOrdersGetHandler(w http.ResponseWriter, r *http.Request) {
 
 	orders, err := h.services.Orders.GetUserOrders(userID)
 	if err != nil {
-		h.log.Infoln("get error: ", err)
 		http.Error(w, "error get user orders", http.StatusInternalServerError)
 		return
 	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusAccepted)
-	if err := json.NewEncoder(w).Encode(orders); err != nil {
-		http.Error(w, "error encoding response", http.StatusInternalServerError)
+	if len(orders) == 0 {
+		http.Error(w, "users don't have orders", http.StatusNoContent)
 		return
 	}
-}
-
-func (h *Handler) ordersGetHandler(w http.ResponseWriter, r *http.Request) {
-	type ResponseD struct {
-		Number  string  `json:"order"`
-		Status  string  `json:"status"`
-		Accrual float64 `json:"accrual"`
-	}
-	var ResponseDD = ResponseD{
-		Number:  "9278923470",
-		Status:  "PROCESSED",
-		Accrual: 500,
-	}
-
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(w).Encode(ResponseDD); err != nil {
+	if err := json.NewEncoder(w).Encode(orders); err != nil {
 		http.Error(w, "error encoding response", http.StatusInternalServerError)
 		return
 	}
@@ -144,7 +133,7 @@ type RespOrder struct {
 func OrderReq(number int) (RespOrder, error) {
 	var Order RespOrder
 	client := resty.New()
-	url := fmt.Sprintf("http://localhost:8080/api/orders/%d", number)
+	url := fmt.Sprintf("%s/api/orders/%d", config.AccSysAddr, number)
 
 	resp, err := client.R().Get(url)
 	if err != nil {
@@ -161,24 +150,3 @@ func OrderReq(number int) (RespOrder, error) {
 	}
 	return Order, err
 }
-
-// func OrderReq(number int) (RespOrder, error) {
-// 	var Order RespOrder
-// 	client := resty.New()
-// 	url := fmt.Sprintf("%s/api/orders/%d", config.AccSysAddr, number)
-
-// 	resp, err := client.R().Get(url)
-// 	if err != nil {
-// 		return Order, err
-// 	}
-
-// 	if resp.StatusCode() == http.StatusOK {
-// 		err = json.Unmarshal(resp.Body(), &Order)
-// 		if err != nil {
-// 			return Order, err
-// 		}
-// 	} else if resp.StatusCode() == http.StatusTooManyRequests {
-// 		return Order, ErrTooManyRequests
-// 	}
-// 	return Order, err
-// }

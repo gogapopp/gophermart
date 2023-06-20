@@ -17,6 +17,10 @@ func (s *UserOrders) Create(userID int, order models.Order) (int, error) {
 	return s.storage.Create(userID, order)
 }
 
+func (s *UserOrders) CheckUserOrder(userID int, order models.Order) error {
+	return s.storage.CheckUserOrder(userID, order)
+}
+
 func (s *UserOrders) GetUserOrders(userID int) ([]models.Order, error) {
 	return s.storage.GetUserOrders(userID)
 }

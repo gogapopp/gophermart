@@ -41,6 +41,26 @@ func (p *UserOrdersPostgres) Create(userID int, order models.Order) (int, error)
 	return orderID, tx.Commit()
 }
 
+func (p *UserOrdersPostgres) CheckUserOrder(userID int, order models.Order) error {
+	checkOrderQuery := fmt.Sprintf("SELECT user_id FROM %s ur INNER JOIN %s o ON ur.order_id = o.id WHERE o.number = $1", usersOrdersTable, ordersTable)
+	row := p.db.QueryRowContext(p.ctx, checkOrderQuery, order.Number)
+	var existingUserID int
+	err := row.Scan(&existingUserID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil
+		} else {
+			return err
+		}
+	} else {
+		if existingUserID == userID {
+			return ErrUserRepeatValue
+		} else {
+			return ErrRepeatValue
+		}
+	}
+}
+
 func (p *UserOrdersPostgres) GetUserOrders(userID int) ([]models.Order, error) {
 	var UserOrders []models.Order
 	userOrdersQuery := fmt.Sprintf("SELECT o.number, o.status, o.accrual, o.uploaded_at FROM %s o INNER JOIN %s ur on o.id = ur.order_id WHERE ur.user_id = $1", ordersTable, usersOrdersTable)

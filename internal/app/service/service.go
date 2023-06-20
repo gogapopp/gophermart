@@ -13,6 +13,7 @@ type Auth interface {
 
 type Orders interface {
 	Create(userID int, order models.Order) (int, error)
+	CheckUserOrder(userID int, order models.Order) error
 	GetUserOrders(userID int) ([]models.Order, error)
 }
 
