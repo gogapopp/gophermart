@@ -39,6 +39,9 @@ func (h *Handler) userOrdersPostHandler(w http.ResponseWriter, r *http.Request) 
 		if errors.As(err, &pgErr) {
 			http.Error(w, "order already exists", http.StatusConflict)
 			return
+		} else if errors.Is(err, ErrNoContent) {
+			http.Error(w, "no content", http.StatusNoContent)
+			return
 		} else if errors.Is(err, ErrTooManyRequests) {
 			http.Error(w, "too many requests", http.StatusTooManyRequests)
 			return
@@ -139,26 +142,22 @@ func OrderReq(number int) (RespOrder, error) {
 	client := resty.New()
 	url := fmt.Sprintf("%s/api/orders/%d", config.AccSysAddr, number)
 
-	for {
-		resp, err := client.R().Get(url)
+	resp, err := client.R().Get(url)
+	if err != nil {
+		return Order, err
+	}
+
+	if resp.StatusCode() == http.StatusOK {
+		err = json.Unmarshal(resp.Body(), &Order)
 		if err != nil {
 			return Order, err
 		}
-
-		if resp.StatusCode() == http.StatusOK {
-			err = json.Unmarshal(resp.Body(), &Order)
-			if err != nil {
-				return Order, err
-			}
-			if len(Order.Status) > 1 {
-				return Order, nil
-			}
-		} else if resp.StatusCode() == http.StatusTooManyRequests {
-			return Order, ErrTooManyRequests
-		}
-
-		time.Sleep(3 * time.Second)
+	} else if resp.StatusCode() == http.StatusTooManyRequests {
+		return Order, ErrTooManyRequests
+	} else if resp.StatusCode() == http.StatusNoContent {
+		return Order, ErrTooManyRequests
 	}
+	return Order, err
 }
 
 // func (h *Handler) GetOrder(w http.ResponseWriter, r *http.Request) {
