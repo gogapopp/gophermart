@@ -63,7 +63,7 @@ func (p *UserOrdersPostgres) CheckUserOrder(userID int, order models.Order) erro
 
 func (p *UserOrdersPostgres) GetUserOrders(userID int) ([]models.Order, error) {
 	var UserOrders []models.Order
-	userOrdersQuery := fmt.Sprintf("SELECT o.number, o.status, o.accrual, o.uploaded_at FROM %s o INNER JOIN %s ur on o.id = ur.order_id WHERE ur.user_id = $1", ordersTable, usersOrdersTable)
+	userOrdersQuery := fmt.Sprintf("SELECT o.number, o.status, o.accrual, o.uploaded_at FROM %s o INNER JOIN %s ur on o.id = ur.order_id WHERE ur.user_id = $1 ORDER BY o.uploaded_at ASC", ordersTable, usersOrdersTable)
 	rows, err := p.db.QueryContext(p.ctx, userOrdersQuery, userID)
 	if err != nil {
 		return nil, err

@@ -157,15 +157,13 @@ func OrderReq(number int) (RespOrder, error) {
 
 // func (h *Handler) GetOrder(w http.ResponseWriter, r *http.Request) {
 // 	type ResponseD struct {
-// 		Number     string  `json:"order"`
-// 		Status     string  `json:"status"`
-// 		Accrual    float64 `json:"accrual"`
-// 		UploadedAt string  `json:"uploaded_at"`
+// 		Number  string  `json:"order"`
+// 		Status  string  `json:"status"`
+// 		Accrual float64 `json:"accrual"`
 // 	}
 
 // 	var ResponseDD = ResponseD{
 // 		Number:  "9278923470",
-// 		Status:  "",
 // 		Accrual: 500,
 // 	}
 
