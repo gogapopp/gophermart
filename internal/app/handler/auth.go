@@ -57,8 +57,6 @@ func (h *Handler) userLoginPostHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "error generate token", http.StatusInternalServerError)
 		return
 	}
-
-	h.log.Info(fmt.Sprintf("Bearer %s", token))
 	w.Header().Set("Authorization", fmt.Sprintf("Bearer %s", token))
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)

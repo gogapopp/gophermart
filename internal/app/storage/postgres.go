@@ -45,7 +45,7 @@ func NewDB(ctx context.Context, dsn string) (*sql.DB, error) {
 	_, err = tx.ExecContext(ctx, `
 		CREATE TABLE IF NOT EXISTS orders (
 			id serial not null unique,
-			number int,
+			number varchar(256),
 			status varchar(256),
 			accrual decimal,
 			uploaded_at timestamptz

@@ -26,12 +26,9 @@ func (p *UserOrdersPostgres) Create(userID int, order models.Order) (int, error)
 	var orderID int
 	createOrderQuery := fmt.Sprintf("INSERT INTO %s (number, status, accrual, uploaded_at) VALUES ($1, $2, $3, $4) RETURNING id", ordersTable)
 	row := tx.QueryRowContext(p.ctx, createOrderQuery, order.Number, order.Status, order.Accrual, order.UploadedAt)
-	if err := row.Scan(orderID); err != nil {
-		if err := row.Scan(&orderID); err != nil {
-			return 0, err
-		}
+	if err := row.Scan(&orderID); err != nil {
 		tx.Rollback()
-		return 0, err
+		return 0, ErrRepeatValue
 	}
 
 	createUsersOrdersQuery := fmt.Sprintf("INSERT INTO %s (user_id, order_id) VALUES ($1, $2)", usersOrdersTable)
@@ -46,7 +43,7 @@ func (p *UserOrdersPostgres) Create(userID int, order models.Order) (int, error)
 
 func (p *UserOrdersPostgres) GetUserOrders(userID int) ([]models.Order, error) {
 	var UserOrders []models.Order
-	userOrdersQuery := fmt.Sprintf("SELECT * FROM %s o INNER JOIN %s ur on o.id = ur.order_id WHERE ur.user_id = $1", ordersTable, usersOrdersTable)
+	userOrdersQuery := fmt.Sprintf("SELECT o.number, o.status, o.accrual, o.uploaded_at FROM %s o INNER JOIN %s ur on o.id = ur.order_id WHERE ur.user_id = $1", ordersTable, usersOrdersTable)
 	rows, err := p.db.QueryContext(p.ctx, userOrdersQuery, userID)
 	if err != nil {
 		return nil, err
@@ -54,7 +51,7 @@ func (p *UserOrdersPostgres) GetUserOrders(userID int) ([]models.Order, error) {
 	defer rows.Close()
 	for rows.Next() {
 		var order models.Order
-		if err := rows.Scan(&order.ID, &order.Number, &order.Status, &order.Accrual, &order.UploadedAt); err != nil {
+		if err := rows.Scan(&order.Number, &order.Status, &order.Accrual, &order.UploadedAt); err != nil {
 			return nil, err
 		}
 		UserOrders = append(UserOrders, order)
