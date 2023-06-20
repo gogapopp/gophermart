@@ -67,6 +67,9 @@ func (h *Handler) userOrdersPostHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	if len(Order.Status) < 1 {
+		Order.Status = "NEW"
+	}
 	_, err = h.services.Orders.Create(userID, Order)
 	if err != nil {
 		if errors.Is(err, storage.ErrRepeatValue) {
@@ -96,6 +99,7 @@ func (h *Handler) userOrdersGetHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "users don't have orders", http.StatusNoContent)
 		return
 	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	if err := json.NewEncoder(w).Encode(orders); err != nil {
