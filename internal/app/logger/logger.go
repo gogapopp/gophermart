@@ -10,7 +10,7 @@ func NewLogger() (*zap.SugaredLogger, error) {
 		return nil, err
 	}
 	defer logger.Sync()
-	sugar := logger.Sugar()
+	Sugar := logger.Sugar()
 
-	return sugar, nil
+	return Sugar, nil
 }

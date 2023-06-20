@@ -39,9 +39,6 @@ func (h *Handler) userOrdersPostHandler(w http.ResponseWriter, r *http.Request) 
 		if errors.As(err, &pgErr) {
 			http.Error(w, "order already exists", http.StatusConflict)
 			return
-		} else if errors.Is(err, ErrNoContent) {
-			http.Error(w, "no content", http.StatusNoContent)
-			return
 		} else if errors.Is(err, ErrTooManyRequests) {
 			http.Error(w, "too many requests", http.StatusTooManyRequests)
 			return
@@ -78,6 +75,7 @@ func (h *Handler) userOrdersPostHandler(w http.ResponseWriter, r *http.Request) 
 		}
 		log.Fatal(err)
 	}
+	h.log.Info(userID, Order)
 	w.WriteHeader(http.StatusAccepted)
 }
 
@@ -153,8 +151,6 @@ func OrderReq(number int) (RespOrder, error) {
 			return Order, err
 		}
 	} else if resp.StatusCode() == http.StatusTooManyRequests {
-		return Order, ErrTooManyRequests
-	} else if resp.StatusCode() == http.StatusNoContent {
 		return Order, ErrTooManyRequests
 	}
 	return Order, err
