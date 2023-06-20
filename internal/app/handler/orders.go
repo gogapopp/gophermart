@@ -139,20 +139,26 @@ func OrderReq(number int) (RespOrder, error) {
 	client := resty.New()
 	url := fmt.Sprintf("%s/api/orders/%d", config.AccSysAddr, number)
 
-	resp, err := client.R().Get(url)
-	if err != nil {
-		return Order, err
-	}
-
-	if resp.StatusCode() == http.StatusOK {
-		err = json.Unmarshal(resp.Body(), &Order)
+	for {
+		resp, err := client.R().Get(url)
 		if err != nil {
 			return Order, err
 		}
-	} else if resp.StatusCode() == http.StatusTooManyRequests {
-		return Order, ErrTooManyRequests
+
+		if resp.StatusCode() == http.StatusOK {
+			err = json.Unmarshal(resp.Body(), &Order)
+			if err != nil {
+				return Order, err
+			}
+			if len(Order.Status) > 1 {
+				return Order, nil
+			}
+		} else if resp.StatusCode() == http.StatusTooManyRequests {
+			return Order, ErrTooManyRequests
+		}
+
+		time.Sleep(3 * time.Second)
 	}
-	return Order, err
 }
 
 // func (h *Handler) GetOrder(w http.ResponseWriter, r *http.Request) {

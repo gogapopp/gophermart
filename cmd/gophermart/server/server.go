@@ -20,11 +20,10 @@ func NewServer(log *zap.SugaredLogger) *Server {
 
 func (s *Server) Run(handler http.Handler) error {
 	s.httpServer = &http.Server{
-		Addr:           config.RunAddr,
-		Handler:        handler,
-		MaxHeaderBytes: 1 << 20,
-		ReadTimeout:    10 * time.Second,
-		WriteTimeout:   10 * time.Second,
+		Addr:         config.RunAddr,
+		Handler:      handler,
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 10 * time.Second,
 	}
 	s.log.Info("run server at address: ", config.RunAddr)
 	return s.httpServer.ListenAndServe()
