@@ -88,6 +88,9 @@ func (h *Handler) userOrdersGetHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "error get user orders", http.StatusInternalServerError)
 		return
 	}
+	h.log.Info("orders",
+		fmt.Sprint(orders),
+	)
 	if len(orders) == 0 {
 		http.Error(w, "users don't have orders", http.StatusNoContent)
 		return
