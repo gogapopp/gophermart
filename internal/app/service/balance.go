@@ -9,7 +9,7 @@ type UserBalance struct {
 	storage storage.Balance
 }
 
-func NewUserBalance(storage storage.Balance) *UserBalance {
+func NewUserBalanceService(storage storage.Balance) *UserBalance {
 	return &UserBalance{storage: storage}
 }
 

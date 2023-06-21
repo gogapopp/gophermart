@@ -9,7 +9,7 @@ type UserOrders struct {
 	storage storage.Orders
 }
 
-func NewUserOrders(storage storage.Orders) *UserOrders {
+func NewUserOrdersService(storage storage.Orders) *UserOrders {
 	return &UserOrders{storage: storage}
 }
 

@@ -23,16 +23,23 @@ type Balance interface {
 	GetUserBalance(userID int) (models.Balance, error)
 }
 
+type Withdrawals interface {
+	UserWithdraw(userID int, withdraw models.Withdraw) error
+	GetUserWithdrawals(userID int) ([]models.Withdraw, error)
+}
+
 type Storage struct {
 	Auth
 	Orders
 	Balance
+	Withdrawals
 }
 
 func NewStorage(ctx context.Context, db *sql.DB) *Storage {
 	return &Storage{
-		Auth:    NewAuthPostgres(ctx, db),
-		Orders:  NewUserOrdersPostgres(ctx, db),
-		Balance: NewUserBalancePostgres(ctx, db),
+		Auth:        NewAuthPostgres(ctx, db),
+		Orders:      NewUserOrdersPostgres(ctx, db),
+		Balance:     NewUserBalancePostgres(ctx, db),
+		Withdrawals: NewWithdrawalsPostgres(ctx, db),
 	}
 }

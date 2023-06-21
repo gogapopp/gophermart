@@ -147,6 +147,8 @@ type RespOrder struct {
 	UploadedAt string  `json:"uploaded_at"`
 }
 
+////////////////////////////////////////////////////////////////////////////
+
 func OrderReq(number int) (RespOrder, error) {
 	var Order RespOrder
 	client := resty.New()

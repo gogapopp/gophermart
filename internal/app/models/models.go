@@ -24,14 +24,14 @@ type Balance struct {
 	Withdrawn float64 `json:"withdrawn"`
 }
 
-type Withdraw struct {
-	Order       int    `json:"order"`
-	Sum         int    `json:"sum"`
-	ProcessedAt string `json:"processed_at"`
+type RequestBody struct {
+	Order string
+	Sum   float64
 }
 
-type Number struct {
-	Order   int    `json:"order"`
-	Status  string `json:"status"`
-	Accrual int    `json:"accrual"`
+type Withdraw struct {
+	UserID      int     `json:"-"`
+	Order       string  `json:"order"`
+	Sum         float64 `json:"sum"`
+	ProcessedAt string  `json:"processed_at"`
 }
