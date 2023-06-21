@@ -3,7 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strconv"
 	"time"
@@ -19,7 +19,7 @@ func (h *Handler) userBalanceWithdrawPostHanlder(w http.ResponseWriter, r *http.
 		http.Error(w, "error get user balance", http.StatusInternalServerError)
 		return
 	}
-	body, err := ioutil.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, "error read request body", http.StatusInternalServerError)
 		return
@@ -79,5 +79,4 @@ func (h *Handler) userBalanceWithdrawalsGetHanlder(w http.ResponseWriter, r *htt
 		http.Error(w, "error encoding response", http.StatusInternalServerError)
 		return
 	}
-	w.WriteHeader(http.StatusOK)
 }
