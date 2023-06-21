@@ -12,7 +12,10 @@ func (h *Handler) userBalanceGetHanlder(w http.ResponseWriter, r *http.Request) 
 	userBalance, err := h.services.GetUserBalance(userID)
 	fmt.Println(userBalance)
 	if err != nil {
-		fmt.Println(err)
+		if err != nil {
+			http.Error(w, "error get user balance", http.StatusInternalServerError)
+			return
+		}
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)

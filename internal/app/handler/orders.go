@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/go-resty/resty/v2"
+	"github.com/gogapopp/gophermart/config"
 	"github.com/gogapopp/gophermart/internal/app/models"
 	"github.com/gogapopp/gophermart/internal/app/storage"
 )
@@ -146,53 +147,10 @@ type RespOrder struct {
 	UploadedAt string  `json:"uploaded_at"`
 }
 
-// func OrderReq(number int) (RespOrder, error) {
-// 	var Order RespOrder
-// 	client := resty.New()
-// 	url := fmt.Sprintf("%s/api/orders/%d", config.AccSysAddr, number)
-
-// 	resp, err := client.R().Get(url)
-// 	if err != nil {
-// 		return Order, err
-// 	}
-
-// 	if resp.StatusCode() == http.StatusOK {
-// 		err = json.Unmarshal(resp.Body(), &Order)
-// 		if err != nil {
-// 			return Order, err
-// 		}
-// 	} else if resp.StatusCode() == http.StatusTooManyRequests {
-// 		return Order, ErrTooManyRequests
-// 	}
-// 	return Order, err
-// }
-
-//////////////////////////////////////////////////////////////////////////////////////////////////
-
-func (h *Handler) GetOrder(w http.ResponseWriter, r *http.Request) {
-	type ResponseD struct {
-		Number  string  `json:"order"`
-		Status  string  `json:"status"`
-		Accrual float64 `json:"accrual"`
-	}
-
-	var ResponseDD = ResponseD{
-		Number:  "9278923470",
-		Accrual: 500.345,
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(w).Encode(&ResponseDD); err != nil {
-		http.Error(w, "error encoding response", http.StatusInternalServerError)
-		return
-	}
-}
-
 func OrderReq(number int) (RespOrder, error) {
 	var Order RespOrder
 	client := resty.New()
-	url := fmt.Sprintf("http://localhost:8080/api/orders/%d", number)
+	url := fmt.Sprintf("%s/api/orders/%d", config.AccSysAddr, number)
 
 	resp, err := client.R().Get(url)
 	if err != nil {
@@ -209,3 +167,46 @@ func OrderReq(number int) (RespOrder, error) {
 	}
 	return Order, err
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+
+// func (h *Handler) GetOrder(w http.ResponseWriter, r *http.Request) {
+// 	type ResponseD struct {
+// 		Number  string  `json:"order"`
+// 		Status  string  `json:"status"`
+// 		Accrual float64 `json:"accrual"`
+// 	}
+
+// 	var ResponseDD = ResponseD{
+// 		Number:  "9278923470",
+// 		Accrual: 500.345,
+// 	}
+
+// 	w.Header().Set("Content-Type", "application/json")
+// 	w.WriteHeader(http.StatusOK)
+// 	if err := json.NewEncoder(w).Encode(&ResponseDD); err != nil {
+// 		http.Error(w, "error encoding response", http.StatusInternalServerError)
+// 		return
+// 	}
+// }
+
+// func OrderReq(number int) (RespOrder, error) {
+// 	var Order RespOrder
+// 	client := resty.New()
+// 	url := fmt.Sprintf("http://localhost:8080/api/orders/%d", number)
+
+// 	resp, err := client.R().Get(url)
+// 	if err != nil {
+// 		return Order, err
+// 	}
+
+// 	if resp.StatusCode() == http.StatusOK {
+// 		err = json.Unmarshal(resp.Body(), &Order)
+// 		if err != nil {
+// 			return Order, err
+// 		}
+// 	} else if resp.StatusCode() == http.StatusTooManyRequests {
+// 		return Order, ErrTooManyRequests
+// 	}
+// 	return Order, err
+// }
