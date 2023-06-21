@@ -12,6 +12,7 @@ const (
 	usersTable       = "users"
 	ordersTable      = "orders"
 	usersOrdersTable = "users_orders"
+	usersBalance     = "user_balance"
 )
 
 func NewDB(ctx context.Context, dsn string) (*sql.DB, error) {
@@ -57,6 +58,33 @@ func NewDB(ctx context.Context, dsn string) (*sql.DB, error) {
 	}
 
 	_, err = tx.ExecContext(ctx, `
+		CREATE TABLE IF NOT EXISTS user_balance (
+			id serial not null unique,
+			user_id int,
+			current_balance decimal default 0,
+			withdrawn decimal default 0
+		)
+	`)
+	if err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	// _, err = tx.ExecContext(ctx, `
+	// 	CREATE TABLE IF NOT EXISTS withdrawals (
+	// 		id serial not null unique,
+	// 		user_id int,
+	// 		order_id int,
+	// 		sum NUMERIC,
+	// 		processed_at timestamptz
+	// 	)
+	// `)
+	// if err != nil {
+	// 	tx.Rollback()
+	// 	return nil, err
+	// }
+
+	_, err = tx.ExecContext(ctx, `
 		CREATE TABLE IF NOT EXISTS users_orders (
 			id serial not null unique,
 			user_id int references users (id) on delete cascade,
@@ -67,6 +95,18 @@ func NewDB(ctx context.Context, dsn string) (*sql.DB, error) {
 		tx.Rollback()
 		return nil, err
 	}
+
+	// _, err = tx.ExecContext(ctx, `
+	// 	CREATE TABLE IF NOT EXISTS users_withdrawals (
+	// 		id serial not null unique,
+	// 		user_id int references users (id) on delete cascade,
+	// 		withdraw_id int references withdrawals (id) on delete cascade
+	// 	)
+	// `)
+	// if err != nil {
+	// 	tx.Rollback()
+	// 	return nil, err
+	// }
 
 	_, err = tx.ExecContext(ctx, "CREATE UNIQUE INDEX IF NOT EXISTS login_id ON users(login)")
 	if err != nil {

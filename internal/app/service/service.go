@@ -18,6 +18,8 @@ type Orders interface {
 }
 
 type Balance interface {
+	UpdateUserBalance(userID int, accrual float64) error
+	GetUserBalance(userID int) (models.Balance, error)
 }
 
 type Service struct {
@@ -28,7 +30,8 @@ type Service struct {
 
 func NewService(storage *storage.Storage) *Service {
 	return &Service{
-		Auth:   NewAuthService(storage.Auth),
-		Orders: NewUserOrders(storage.Orders),
+		Auth:    NewAuthService(storage.Auth),
+		Orders:  NewUserOrders(storage.Orders),
+		Balance: NewUserBalance(storage.Balance),
 	}
 }

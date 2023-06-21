@@ -18,27 +18,22 @@ func NewUserOrdersPostgres(ctx context.Context, db *sql.DB) *UserOrdersPostgres 
 }
 
 func (p *UserOrdersPostgres) Create(userID int, order models.Order) (int, error) {
-	tx, err := p.db.Begin()
-	if err != nil {
-		return 0, err
-	}
-
 	var orderID int
 	createOrderQuery := fmt.Sprintf("INSERT INTO %s (number, status, accrual, uploaded_at) VALUES ($1, $2, $3, $4) RETURNING id", ordersTable)
-	row := tx.QueryRowContext(p.ctx, createOrderQuery, order.Number, order.Status, order.Accrual, order.UploadedAt)
+	row := p.db.QueryRowContext(p.ctx, createOrderQuery, order.Number, order.Status, order.Accrual, order.UploadedAt)
 	if err := row.Scan(&orderID); err != nil {
-		tx.Rollback()
+		fmt.Println(err, "0")
 		return 0, ErrRepeatValue
 	}
 
 	createUsersOrdersQuery := fmt.Sprintf("INSERT INTO %s (user_id, order_id) VALUES ($1, $2)", usersOrdersTable)
-	_, err = tx.ExecContext(p.ctx, createUsersOrdersQuery, userID, orderID)
+	_, err := p.db.ExecContext(p.ctx, createUsersOrdersQuery, userID, orderID)
 	if err != nil {
-		tx.Rollback()
+		fmt.Println(err, "2")
 		return 0, err
 	}
 
-	return orderID, tx.Commit()
+	return orderID, nil
 }
 
 func (p *UserOrdersPostgres) CheckUserOrder(userID int, order models.Order) error {
@@ -66,6 +61,7 @@ func (p *UserOrdersPostgres) GetUserOrders(userID int) ([]models.Order, error) {
 	userOrdersQuery := fmt.Sprintf("SELECT o.number, o.status, o.accrual, o.uploaded_at FROM %s o INNER JOIN %s ur on o.id = ur.order_id WHERE ur.user_id = $1 ORDER BY o.uploaded_at ASC", ordersTable, usersOrdersTable)
 	rows, err := p.db.QueryContext(p.ctx, userOrdersQuery, userID)
 	if err != nil {
+		fmt.Println(err, "5")
 		return nil, err
 	}
 	defer rows.Close()
@@ -77,6 +73,7 @@ func (p *UserOrdersPostgres) GetUserOrders(userID int) ([]models.Order, error) {
 		UserOrders = append(UserOrders, order)
 	}
 	if err := rows.Err(); err != nil {
+		fmt.Println(err, "6")
 		return nil, err
 	}
 	return UserOrders, nil

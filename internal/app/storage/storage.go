@@ -19,6 +19,8 @@ type Orders interface {
 }
 
 type Balance interface {
+	UpdateUserBalance(userID int, accrual float64) error
+	GetUserBalance(userID int) (models.Balance, error)
 }
 
 type Storage struct {
@@ -29,7 +31,8 @@ type Storage struct {
 
 func NewStorage(ctx context.Context, db *sql.DB) *Storage {
 	return &Storage{
-		Auth:   NewAuthPostgres(ctx, db),
-		Orders: NewUserOrdersPostgres(ctx, db),
+		Auth:    NewAuthPostgres(ctx, db),
+		Orders:  NewUserOrdersPostgres(ctx, db),
+		Balance: NewUserBalancePostgres(ctx, db),
 	}
 }

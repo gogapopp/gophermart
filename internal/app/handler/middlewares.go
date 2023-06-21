@@ -1,9 +1,7 @@
 package handler
 
 import (
-	"bytes"
 	"context"
-	"io"
 	"net/http"
 	"strings"
 )
@@ -34,24 +32,5 @@ func (h *Handler) userIdentity(next http.HandlerFunc) http.HandlerFunc {
 
 		r = r.WithContext(context.WithValue(r.Context(), userIDkey, userID))
 		next(w, r)
-	})
-}
-
-// RequestLogger логирует POST запрос
-func (h *Handler) RequestLogger(v http.HandlerFunc) http.HandlerFunc {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// читаем боди запоса
-		body, err := io.ReadAll(r.Body)
-		if err != nil {
-			h.log.Info(err)
-		}
-		// возвращаем данные обратно
-		r.Body = io.NopCloser(bytes.NewBuffer(body))
-
-		v(w, r)
-		h.log.Info("POST request",
-			r.Method,
-			string(body),
-		)
 	})
 }
