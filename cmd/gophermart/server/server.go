@@ -14,10 +14,12 @@ type Server struct {
 	log        *zap.SugaredLogger
 }
 
+// NewServer возвращает структуру сервера
 func NewServer(log *zap.SugaredLogger) *Server {
 	return &Server{httpServer: &http.Server{}, log: log}
 }
 
+// Run запускает сервер
 func (s *Server) Run(handler http.Handler) error {
 	s.httpServer = &http.Server{
 		Addr:         config.RunAddr,
@@ -29,6 +31,7 @@ func (s *Server) Run(handler http.Handler) error {
 	return s.httpServer.ListenAndServe()
 }
 
+// Shutdown выключает сервер
 func (s *Server) Shutdown(ctx context.Context) error {
 	s.log.Info("server shutdown...")
 	return s.httpServer.Shutdown(ctx)

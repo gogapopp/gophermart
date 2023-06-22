@@ -1,25 +1,41 @@
 # go-musthave-diploma-tpl
 
-Шаблон репозитория для индивидуального дипломного проекта курса «Go-разработчик»
+users                       
+| id | login | password |   
+|    |       |          |   
+id - serial not null unique 
+login - varchar(256)        
+password - varchar(256)  (hashed)                  
 
-# Начало работы
+orders                                                
+| id | number | status | accrual | uploaded_at |
+|    |        |        |         |             |
+id - serial not null unique                     
+number - varchar(256)                           
+status - varchar(256)                           
+accrual - decimal                               
+uploaded_at - timestamptz
 
-1. Склонируйте репозиторий в любую подходящую директорию на вашем компьютере.
-2. В корне репозитория выполните команду `go mod init <name>` (где `<name>` — адрес вашего репозитория на GitHub без
-   префикса `https://`) для создания модуля
+users_orders                                               
+| id | user_id | order_id |                                
+|    |         |          |                                
+id - serial not null unique                                
+user_id - int references users (id) on delete cascade      
+order_id - int references orders (id) on delete cascade    
 
-# Обновление шаблона
-
-Чтобы иметь возможность получать обновления автотестов и других частей шаблона, выполните команду:
-
-```
-git remote add -m master template https://github.com/yandex-praktikum/go-musthave-diploma-tpl.git
-```
-
-Для обновления кода автотестов выполните команду:
-
-```
-git fetch template && git checkout template/master .github
-```
-
-Затем добавьте полученные изменения в свой репозиторий.
+user_balance
+| id | user_id | current_balance | withdrawn |
+|    |         |                 |           |
+id - serial not null unique
+user_id - int
+current_balance - decimal default 0
+withdrawn  - decimal default 0                                
+                                              
+withdrawals
+| id | user_id | order_id | sum | processed_at |
+|    |         |          |     |              |
+id - serial not null unique
+user_id - int
+order_id - varchar(256)
+sum - decimal
+processed_at - timestamptz

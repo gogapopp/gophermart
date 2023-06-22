@@ -9,14 +9,17 @@ type UserBalance struct {
 	storage storage.Balance
 }
 
+// NewUserBalanceService создаёт структуру UserBalance
 func NewUserBalanceService(storage storage.Balance) *UserBalance {
 	return &UserBalance{storage: storage}
 }
 
+// UpdateUserBalanc передаёт данные на слой storage
 func (s *UserBalance) UpdateUserBalance(userID int, accrual float64) error {
 	return s.storage.UpdateUserBalance(userID, accrual)
 }
 
+// GetUserBalance передаёт данные на слой storage
 func (s *UserBalance) GetUserBalance(userID int) (models.Balance, error) {
 	return s.storage.GetUserBalance(userID)
 }

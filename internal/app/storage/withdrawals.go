@@ -13,34 +13,34 @@ type WithdrawalsPostgres struct {
 	db  *sql.DB
 }
 
+// NewWithdrawalsPostgres возвращает *WithdrawalsPostgres
 func NewWithdrawalsPostgres(ctx context.Context, db *sql.DB) *WithdrawalsPostgres {
 	return &WithdrawalsPostgres{ctx: ctx, db: db}
 }
 
+// UserWithdraw записывает withdraw юзера в БД
 func (p *WithdrawalsPostgres) UserWithdraw(userID int, withdraw models.Withdraw) error {
 	userWithdrawQuery := fmt.Sprintf("INSERT INTO %s (user_id, order_id, sum, processed_at) VALUES ($1, $2, $3, $4)", usersWithdrawals)
 	_, err := p.db.ExecContext(p.ctx, userWithdrawQuery, userID, withdraw.Order, withdraw.Sum, withdraw.ProcessedAt)
 	if err != nil {
-		fmt.Println(err)
 		return err
 	}
 
 	updateWithdrawBalanceQuery := fmt.Sprintf("UPDATE %s SET withdrawn = $1 WHERE user_id = $2", usersBalance)
 	_, err = p.db.ExecContext(p.ctx, updateWithdrawBalanceQuery, &withdraw.Sum, userID)
 	if err != nil {
-		fmt.Println(err)
 		return err
 	}
 
 	return err
 }
 
+// GetUserWithdrawals получает все withdraw юзера из БД
 func (p *WithdrawalsPostgres) GetUserWithdrawals(userID int) ([]models.Withdraw, error) {
 	var userWithdrawals []models.Withdraw
 	userWithdrawalsQuery := fmt.Sprintf("SELECT order_id, sum, processed_at FROM %s WHERE user_id=$1 ORDER BY processed_at ASC", usersWithdrawals)
 	rows, err := p.db.QueryContext(p.ctx, userWithdrawalsQuery, userID)
 	if err != nil {
-		fmt.Println(err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -52,7 +52,6 @@ func (p *WithdrawalsPostgres) GetUserWithdrawals(userID int) ([]models.Withdraw,
 		userWithdrawals = append(userWithdrawals, withdraw)
 	}
 	if err := rows.Err(); err != nil {
-		fmt.Println(err)
 		return nil, err
 	}
 	return userWithdrawals, nil

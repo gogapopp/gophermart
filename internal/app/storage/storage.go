@@ -35,6 +35,7 @@ type Storage struct {
 	Withdrawals
 }
 
+// NewStorage возвращает указатель на Storage со встроенными интерфейсами
 func NewStorage(ctx context.Context, db *sql.DB) *Storage {
 	return &Storage{
 		Auth:        NewAuthPostgres(ctx, db),

@@ -4,6 +4,7 @@ import (
 	"go.uber.org/zap"
 )
 
+// NewLogger создаём логгер
 func NewLogger() (*zap.SugaredLogger, error) {
 	logger, err := zap.NewProduction()
 	if err != nil {

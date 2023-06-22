@@ -34,6 +34,7 @@ type Service struct {
 	Withdrawals
 }
 
+// NewService возвращает указатель на Service со встроенными интерфейсами
 func NewService(storage *storage.Storage) *Service {
 	return &Service{
 		Auth:        NewAuthService(storage.Auth),

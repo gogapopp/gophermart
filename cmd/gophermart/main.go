@@ -40,7 +40,7 @@ func main() {
 			log.Fatal("error to start the server", err)
 		}
 	}()
-
+	// реализация graceful shutdown
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGTERM, syscall.SIGINT)
 	<-quit

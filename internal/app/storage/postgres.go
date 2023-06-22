@@ -16,6 +16,7 @@ const (
 	usersWithdrawals = "withdrawals"
 )
 
+// NewDB создаёт таблицы и индексы
 func NewDB(ctx context.Context, dsn string) (*sql.DB, error) {
 	db, err := sql.Open("pgx", config.DatabaseURI)
 	if err != nil {
