@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/gogapopp/gophermart/internal/app/models"
 	"github.com/gogapopp/gophermart/internal/app/storage"
-	"github.com/gogapopp/gophermart/models"
 	"github.com/golang-jwt/jwt/v4"
 )
 
@@ -16,7 +16,7 @@ const (
 )
 
 type tokenClaims struct {
-	jwt.StandardClaims
+	jwt.RegisteredClaims
 	UserID int `json:"id"`
 }
 
@@ -24,15 +24,18 @@ type AuthService struct {
 	storage storage.Auth
 }
 
+// NewAuthService возвращает структуру AuthService
 func NewAuthService(storage storage.Auth) *AuthService {
 	return &AuthService{storage: storage}
 }
 
+// CreateUser хеширует пароль который передал юзер и передаёт дальше на слой storage
 func (s *AuthService) CreateUser(user models.User) (int, error) {
 	user.Password = generatePasswordHash(user.Password)
 	return s.storage.CreateUser(user)
 }
 
+// GenerateToken создаёт юзера и токен авторизации
 func (s *AuthService) GenerateToken(login, password string) (string, error) {
 	user, err := s.storage.GetUser(login, generatePasswordHash(password))
 	if err != nil {
@@ -40,8 +43,8 @@ func (s *AuthService) GenerateToken(login, password string) (string, error) {
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, &tokenClaims{
-		jwt.StandardClaims{
-			IssuedAt: time.Now().Unix(),
+		jwt.RegisteredClaims{
+			IssuedAt: jwt.NewNumericDate(time.Now()),
 		},
 		user.ID,
 	})
@@ -49,6 +52,7 @@ func (s *AuthService) GenerateToken(login, password string) (string, error) {
 	return token.SignedString([]byte(signingKey))
 }
 
+// ParseToken разбирает jwt токен на claims
 func (s *AuthService) ParseToken(accessToken string) (int, error) {
 	token, err := jwt.ParseWithClaims(accessToken, &tokenClaims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -69,6 +73,7 @@ func (s *AuthService) ParseToken(accessToken string) (int, error) {
 	return claims.UserID, nil
 }
 
+// generatePasswordHas хеширует пароль
 func generatePasswordHash(password string) string {
 	hash := sha256.New()
 	hash.Write([]byte(password))

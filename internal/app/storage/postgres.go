@@ -9,9 +9,14 @@ import (
 )
 
 const (
-	userTable = "users"
+	usersTable       = "users"
+	ordersTable      = "orders"
+	usersOrdersTable = "users_orders"
+	usersBalance     = "user_balance"
+	usersWithdrawals = "withdrawals"
 )
 
+// NewDB создаёт таблицы и индексы
 func NewDB(ctx context.Context, dsn string) (*sql.DB, error) {
 	db, err := sql.Open("pgx", config.DatabaseURI)
 	if err != nil {
@@ -43,10 +48,37 @@ func NewDB(ctx context.Context, dsn string) (*sql.DB, error) {
 	_, err = tx.ExecContext(ctx, `
 		CREATE TABLE IF NOT EXISTS orders (
 			id serial not null unique,
-			number int,
+			number varchar(256),
 			status varchar(256),
 			accrual decimal,
-			uploaded_at varchar(256)
+			uploaded_at timestamptz
+		)
+	`)
+	if err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	_, err = tx.ExecContext(ctx, `
+		CREATE TABLE IF NOT EXISTS user_balance (
+			id serial not null unique,
+			user_id int,
+			current_balance decimal default 0,
+			withdrawn decimal default 0
+		)
+	`)
+	if err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	_, err = tx.ExecContext(ctx, `
+		CREATE TABLE IF NOT EXISTS withdrawals (
+			id serial not null unique,
+			user_id int,
+			order_id varchar(256),
+			sum decimal,
+			processed_at timestamptz
 		)
 	`)
 	if err != nil {
