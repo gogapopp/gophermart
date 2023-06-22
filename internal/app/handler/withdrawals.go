@@ -50,6 +50,11 @@ func (h *Handler) userBalanceWithdrawPostHanlder(w http.ResponseWriter, r *http.
 		ProcessedAt: time.Now().Format(time.RFC3339),
 	}
 	err = h.services.Balance.UpdateUserBalance(userID, -rb.Sum)
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, "error update user balance", http.StatusInternalServerError)
+		return
+	}
 
 	err = h.services.Withdrawals.UserWithdraw(userID, WithdrawResp)
 	if err != nil {

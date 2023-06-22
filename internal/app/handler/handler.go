@@ -26,7 +26,7 @@ func (h *Handler) InitRoutes() *chi.Mux {
 	r.Post("/api/user/register", h.userRegisterPostHandler)
 	r.Post("/api/user/login", h.userLoginPostHandler)
 	r.Post("/api/user/orders", h.userIdentity(h.userOrdersPostHandler))
-	// r.Get("/api/orders/{numbers}", (h.GetOrder))
+	r.Get("/api/orders/{numbers}", (h.GetOrder))
 	r.Get("/api/user/orders", h.userIdentity(h.userOrdersGetHandler))
 	r.Get("/api/user/balance", h.userIdentity(h.userBalanceGetHanlder))
 	r.Post("/api/user/balance/withdraw", h.userIdentity(h.userBalanceWithdrawPostHanlder))

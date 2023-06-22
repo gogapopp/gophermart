@@ -24,6 +24,15 @@ func (p *WithdrawalsPostgres) UserWithdraw(userID int, withdraw models.Withdraw)
 		fmt.Println(err)
 		return err
 	}
+
+	updateWithdrawBalanceQuery := fmt.Sprintf("UPDATE %s SET withdrawn = $1 WHERE user_id = $2", usersBalance)
+	_, err = p.db.ExecContext(p.ctx, updateWithdrawBalanceQuery, &withdraw.Sum, userID)
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+
+	return nil
 	return err
 }
 
