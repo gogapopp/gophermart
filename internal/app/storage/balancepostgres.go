@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"math/big"
 
 	"github.com/gogapopp/gophermart/internal/app/models"
 )
@@ -18,18 +19,18 @@ func NewUserBalancePostgres(ctx context.Context, db *sql.DB) *UserBalancePostgre
 }
 
 func (p *UserBalancePostgres) UpdateUserBalance(userID int, accrual float64) error {
-	var currentBalance float64
+	var currentBalance, accrualBig big.Float
 	userCurrentBalanceQuery := fmt.Sprintf("SELECT current_balance FROM %s WHERE user_id = $1", usersBalance)
 	row := p.db.QueryRowContext(p.ctx, userCurrentBalanceQuery, userID)
 	if err := row.Scan(&currentBalance); err != nil {
 		fmt.Println(err)
 		return err
 	}
-
-	currentBalance = currentBalance + accrual
+	accrualBig.SetFloat64(accrual)
+	currentBalance.Add(&currentBalance, &accrualBig)
 
 	updateCurrentBalanceQuery := fmt.Sprintf("UPDATE %s SET current_balance = $1 WHERE user_id = $2", usersBalance)
-	_, err := p.db.ExecContext(p.ctx, updateCurrentBalanceQuery, currentBalance, userID)
+	_, err := p.db.ExecContext(p.ctx, updateCurrentBalanceQuery, &currentBalance, userID)
 	if err != nil {
 		fmt.Println(err)
 		return err
