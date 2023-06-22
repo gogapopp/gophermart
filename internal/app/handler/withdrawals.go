@@ -39,7 +39,7 @@ func (h *Handler) userBalanceWithdrawPostHanlder(w http.ResponseWriter, r *http.
 		http.Error(w, "unvalid order number", http.StatusUnprocessableEntity)
 		return
 	}
-	if userBalance.Current < rb.Sum {
+	if userBalance.Current <= rb.Sum {
 		http.Error(w, "payment required", http.StatusPaymentRequired)
 		return
 	}
