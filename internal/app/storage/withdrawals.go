@@ -32,7 +32,6 @@ func (p *WithdrawalsPostgres) UserWithdraw(userID int, withdraw models.Withdraw)
 		return err
 	}
 
-	return nil
 	return err
 }
 
