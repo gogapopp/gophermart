@@ -19,6 +19,7 @@ func NewUserBalancePostgres(ctx context.Context, db *sql.DB) *UserBalancePostgre
 }
 
 func (p *UserBalancePostgres) UpdateUserBalance(userID int, accrual float64) error {
+	var currentBalanceStr string
 	var currentBalance, accrualBig big.Float
 	userCurrentBalanceQuery := fmt.Sprintf("SELECT current_balance FROM %s WHERE user_id = $1", usersBalance)
 	row := p.db.QueryRowContext(p.ctx, userCurrentBalanceQuery, userID)
@@ -27,6 +28,7 @@ func (p *UserBalancePostgres) UpdateUserBalance(userID int, accrual float64) err
 		return err
 	}
 	accrualBig.SetFloat64(accrual)
+	currentBalance.SetString(currentBalanceStr)
 	currentBalance.Add(&currentBalance, &accrualBig)
 
 	updateCurrentBalanceQuery := fmt.Sprintf("UPDATE %s SET current_balance = $1 WHERE user_id = $2", usersBalance)
