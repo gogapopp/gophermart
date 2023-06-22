@@ -49,6 +49,7 @@ func (h *Handler) userBalanceWithdrawPostHanlder(w http.ResponseWriter, r *http.
 		Sum:         rb.Sum,
 		ProcessedAt: time.Now().Format(time.RFC3339),
 	}
+	err = h.services.Balance.UpdateUserBalance(userID, -rb.Sum)
 
 	err = h.services.Withdrawals.UserWithdraw(userID, WithdrawResp)
 	if err != nil {
