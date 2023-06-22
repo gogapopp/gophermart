@@ -23,7 +23,7 @@ func (p *UserBalancePostgres) UpdateUserBalance(userID int, accrual float64) err
 	var currentBalance, accrualBig big.Float
 	userCurrentBalanceQuery := fmt.Sprintf("SELECT current_balance FROM %s WHERE user_id = $1", usersBalance)
 	row := p.db.QueryRowContext(p.ctx, userCurrentBalanceQuery, userID)
-	if err := row.Scan(&currentBalance); err != nil {
+	if err := row.Scan(&currentBalanceStr); err != nil {
 		fmt.Println(err)
 		return err
 	}
