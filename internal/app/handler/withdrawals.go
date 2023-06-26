@@ -2,7 +2,6 @@ package handler
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"strconv"
@@ -11,27 +10,27 @@ import (
 	"github.com/gogapopp/gophermart/internal/app/models"
 )
 
-func (h *Handler) userBalanceWithdrawPostHanlder(w http.ResponseWriter, r *http.Request) {
-	h.log.Info("POST /api/user/balance/withdraw")
+// postUserBalanceWithdrawHanlder принимает запрос на вывод в виде json и записывает информацию в БД
+func (h *Handler) postUserBalanceWithdrawHanlder(w http.ResponseWriter, r *http.Request) {
 	// получаем userID из контекста который был установлен мидлвеером userIdentity
 	userID := r.Context().Value(userIDkey).(int)
 	// получаем баланс юзера
 	userBalance, err := h.services.GetUserBalance(userID)
 	if err != nil {
-		http.Error(w, "error get user balance", http.StatusInternalServerError)
+		http.Error(w, ErrGetBalance.Error(), http.StatusInternalServerError)
 		return
 	}
 	// читаем бади пост запроса
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		http.Error(w, "error read request body", http.StatusInternalServerError)
+		http.Error(w, ErrReadBody.Error(), http.StatusInternalServerError)
 		return
 	}
 	// декодируем бади в структуру
 	var rb models.RequestBody
 	err = json.Unmarshal(body, &rb)
 	if err != nil {
-		http.Error(w, "error unmarshal request body", http.StatusInternalServerError)
+		http.Error(w, ErrUnmarshal.Error(), http.StatusInternalServerError)
 		return
 	}
 	// конвертируем номер в int
@@ -42,7 +41,7 @@ func (h *Handler) userBalanceWithdrawPostHanlder(w http.ResponseWriter, r *http.
 	}
 	// проверяем номер на валидность
 	if ok := Valid(number); !ok {
-		http.Error(w, "unvalid order number", http.StatusUnprocessableEntity)
+		http.Error(w, ErrUnvalidNumb.Error(), http.StatusUnprocessableEntity)
 		return
 	}
 	// проверяем достаточно ли денег у юзера на балансе (rb.Sum это сумма списания баллов которую мы получили из бади)
@@ -60,28 +59,25 @@ func (h *Handler) userBalanceWithdrawPostHanlder(w http.ResponseWriter, r *http.
 	// обновляем баланс юзера (вычитаем из баланса сумму списания баллов)
 	err = h.services.Balance.UpdateUserBalance(userID, -rb.Sum)
 	if err != nil {
-		fmt.Println(err)
 		http.Error(w, "error update user balance", http.StatusInternalServerError)
 		return
 	}
 	// записываем withdraw юзера в БД
 	err = h.services.Withdrawals.UserWithdraw(userID, WithdrawResp)
 	if err != nil {
-		fmt.Println(err)
 		http.Error(w, "error response withdraw", http.StatusInternalServerError)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
 }
 
-func (h *Handler) userBalanceWithdrawalsGetHanlder(w http.ResponseWriter, r *http.Request) {
-	h.log.Info("GET /api/user/balance/withdrawals")
+// getUserBalanceWithdrawalsHanlder возвращает все withdraw юзера
+func (h *Handler) getUserBalanceWithdrawalsHanlder(w http.ResponseWriter, r *http.Request) {
 	// получаем userID из контекста который был установлен мидлвеером userIdentity
 	userID := r.Context().Value(userIDkey).(int)
 	// получаем все withdraw юзера из БД
 	userWithdrawals, err := h.services.GetUserWithdrawals(userID)
 	if err != nil {
-		fmt.Println(err)
 		http.Error(w, "error get user withdrawals", http.StatusInternalServerError)
 		return
 	}
@@ -94,7 +90,7 @@ func (h *Handler) userBalanceWithdrawalsGetHanlder(w http.ResponseWriter, r *htt
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	if err := json.NewEncoder(w).Encode(userWithdrawals); err != nil {
-		http.Error(w, "error encoding response", http.StatusInternalServerError)
+		http.Error(w, ErrEncogingResp.Error(), http.StatusInternalServerError)
 		return
 	}
 }

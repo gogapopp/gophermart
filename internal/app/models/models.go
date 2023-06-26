@@ -6,10 +6,11 @@ type User struct {
 	Password string `json:"password"`
 }
 
-type UserOrder struct {
-	ID      int
-	userID  int
-	orderID int
+type RespOrder struct {
+	Number     string  `json:"order"`
+	Status     string  `json:"status"`
+	Accrual    float64 `json:"accrual"`
+	UploadedAt string  `json:"uploaded_at"`
 }
 
 type Order struct {

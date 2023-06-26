@@ -6,18 +6,19 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/gogapopp/gophermart/cmd/gophermart/server"
-	"github.com/gogapopp/gophermart/config"
+	"github.com/gogapopp/gophermart/internal/app/config"
 	"github.com/gogapopp/gophermart/internal/app/handler"
 	"github.com/gogapopp/gophermart/internal/app/logger"
+	"github.com/gogapopp/gophermart/internal/app/server"
 	"github.com/gogapopp/gophermart/internal/app/service"
 	"github.com/gogapopp/gophermart/internal/app/storage"
 )
 
 func main() {
-	ctx := context.Background()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 	// парсим env и флаги
-	config.ParseConfig()
+	config := config.ParseConfig()
 	// инициализируем конфиг
 	log, err := logger.NewLogger()
 	if err != nil {
@@ -28,16 +29,20 @@ func main() {
 	if err != nil {
 		log.Fatal("error initialize database", err)
 	}
-	defer db.Close()
+	defer func() {
+		if err := db.Close(); err != nil {
+			log.Error("error closing database", err)
+		}
+	}()
 
 	storage := storage.NewStorage(ctx, db)
 	services := service.NewService(storage)
-	handlers := handler.NewHandler(services, log)
+	handlers := handler.NewHandler(config, services, log)
 
-	srv := server.NewServer(log)
+	srv := server.NewServer(config, log)
 	go func() {
 		if err := srv.Run(handlers.InitRoutes()); err != nil {
-			log.Fatal("error to start the server", err)
+			log.Fatalln("error to start the server", err)
 		}
 	}()
 	// реализация graceful shutdown
@@ -46,6 +51,6 @@ func main() {
 	<-quit
 
 	if err := srv.Shutdown(ctx); err != nil {
-		log.Info("error shurdown server")
+		log.Error("error shutting down server", err)
 	}
 }
