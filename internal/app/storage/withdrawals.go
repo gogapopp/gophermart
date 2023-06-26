@@ -9,25 +9,24 @@ import (
 )
 
 type WithdrawalsPostgres struct {
-	ctx context.Context
-	db  *sql.DB
+	db *sql.DB
 }
 
 // NewWithdrawalsPostgres возвращает *WithdrawalsPostgres
-func NewWithdrawalsPostgres(ctx context.Context, db *sql.DB) *WithdrawalsPostgres {
-	return &WithdrawalsPostgres{ctx: ctx, db: db}
+func NewWithdrawalsPostgres(db *sql.DB) *WithdrawalsPostgres {
+	return &WithdrawalsPostgres{db: db}
 }
 
 // UserWithdraw записывает withdraw юзера в БД
-func (p *WithdrawalsPostgres) UserWithdraw(userID int, withdraw models.Withdraw) error {
+func (p *WithdrawalsPostgres) UserWithdraw(ctx context.Context, userID int, withdraw models.Withdraw) error {
 	userWithdrawQuery := fmt.Sprintf("INSERT INTO %s (user_id, order_id, sum, processed_at) VALUES ($1, $2, $3, $4)", usersWithdrawals)
-	_, err := p.db.ExecContext(p.ctx, userWithdrawQuery, userID, withdraw.Order, withdraw.Sum, withdraw.ProcessedAt)
+	_, err := p.db.ExecContext(ctx, userWithdrawQuery, userID, withdraw.Order, withdraw.Sum, withdraw.ProcessedAt)
 	if err != nil {
 		return err
 	}
 
 	updateWithdrawBalanceQuery := fmt.Sprintf("UPDATE %s SET withdrawn = $1 WHERE user_id = $2", usersBalance)
-	_, err = p.db.ExecContext(p.ctx, updateWithdrawBalanceQuery, &withdraw.Sum, userID)
+	_, err = p.db.ExecContext(ctx, updateWithdrawBalanceQuery, &withdraw.Sum, userID)
 	if err != nil {
 		return err
 	}
@@ -36,10 +35,10 @@ func (p *WithdrawalsPostgres) UserWithdraw(userID int, withdraw models.Withdraw)
 }
 
 // GetUserWithdrawals получает все withdraw юзера из БД
-func (p *WithdrawalsPostgres) GetUserWithdrawals(userID int) ([]models.Withdraw, error) {
+func (p *WithdrawalsPostgres) GetUserWithdrawals(ctx context.Context, userID int) ([]models.Withdraw, error) {
 	var userWithdrawals []models.Withdraw
 	userWithdrawalsQuery := fmt.Sprintf("SELECT order_id, sum, processed_at FROM %s WHERE user_id=$1 ORDER BY processed_at ASC", usersWithdrawals)
-	rows, err := p.db.QueryContext(p.ctx, userWithdrawalsQuery, userID)
+	rows, err := p.db.QueryContext(ctx, userWithdrawalsQuery, userID)
 	if err != nil {
 		return nil, err
 	}

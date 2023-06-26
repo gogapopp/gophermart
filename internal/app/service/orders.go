@@ -1,6 +1,8 @@
 package service
 
 import (
+	"context"
+
 	"github.com/gogapopp/gophermart/internal/app/models"
 	"github.com/gogapopp/gophermart/internal/app/storage"
 )
@@ -15,16 +17,16 @@ func NewUserOrdersService(storage storage.Orders) *UserOrders {
 }
 
 // Create передаёт данные на слой storage
-func (s *UserOrders) Create(userID int, order models.Order) (int, error) {
-	return s.storage.Create(userID, order)
+func (s *UserOrders) Create(ctx context.Context, userID int, order models.Order) (int, error) {
+	return s.storage.Create(ctx, userID, order)
 }
 
 // CheckUserOrder передаёт данные на слой storage
-func (s *UserOrders) CheckUserOrder(userID int, order models.Order) error {
-	return s.storage.CheckUserOrder(userID, order)
+func (s *UserOrders) CheckUserOrder(ctx context.Context, userID int, order models.Order) error {
+	return s.storage.CheckUserOrder(ctx, userID, order)
 }
 
 // GetUserOrders передаёт данные на слой storage
-func (s *UserOrders) GetUserOrders(userID int) ([]models.Order, error) {
-	return s.storage.GetUserOrders(userID)
+func (s *UserOrders) GetUserOrders(ctx context.Context, userID int) ([]models.Order, error) {
+	return s.storage.GetUserOrders(ctx, userID)
 }

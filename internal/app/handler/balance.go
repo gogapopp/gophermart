@@ -7,10 +7,11 @@ import (
 
 // getUserBalanceHanlder возвращает структуру баланса юзера
 func (h *Handler) getUserBalanceHanlder(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	// получаем userID из контекста который был установлен мидлвеером userIdentity
-	userID := r.Context().Value(userIDkey).(int)
+	userID := ctx.Value(userIDkey).(int)
 	// получаем юзер баланс из БД
-	userBalance, err := h.services.GetUserBalance(userID)
+	userBalance, err := h.services.GetUserBalance(ctx, userID)
 	if err != nil {
 		http.Error(w, ErrGetBalance.Error(), http.StatusInternalServerError)
 		return

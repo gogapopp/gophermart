@@ -12,10 +12,11 @@ import (
 
 // postUserBalanceWithdrawHanlder принимает запрос на вывод в виде json и записывает информацию в БД
 func (h *Handler) postUserBalanceWithdrawHanlder(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	// получаем userID из контекста который был установлен мидлвеером userIdentity
-	userID := r.Context().Value(userIDkey).(int)
+	userID := ctx.Value(userIDkey).(int)
 	// получаем баланс юзера
-	userBalance, err := h.services.GetUserBalance(userID)
+	userBalance, err := h.services.GetUserBalance(ctx, userID)
 	if err != nil {
 		http.Error(w, ErrGetBalance.Error(), http.StatusInternalServerError)
 		return
@@ -57,13 +58,13 @@ func (h *Handler) postUserBalanceWithdrawHanlder(w http.ResponseWriter, r *http.
 		ProcessedAt: time.Now().Format(time.RFC3339),
 	}
 	// обновляем баланс юзера (вычитаем из баланса сумму списания баллов)
-	err = h.services.Balance.UpdateUserBalance(userID, -rb.Sum)
+	err = h.services.Balance.UpdateUserBalance(ctx, userID, -rb.Sum)
 	if err != nil {
 		http.Error(w, "error update user balance", http.StatusInternalServerError)
 		return
 	}
 	// записываем withdraw юзера в БД
-	err = h.services.Withdrawals.UserWithdraw(userID, WithdrawResp)
+	err = h.services.Withdrawals.UserWithdraw(ctx, userID, WithdrawResp)
 	if err != nil {
 		http.Error(w, "error response withdraw", http.StatusInternalServerError)
 		return
@@ -73,10 +74,11 @@ func (h *Handler) postUserBalanceWithdrawHanlder(w http.ResponseWriter, r *http.
 
 // getUserBalanceWithdrawalsHanlder возвращает все withdraw юзера
 func (h *Handler) getUserBalanceWithdrawalsHanlder(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	// получаем userID из контекста который был установлен мидлвеером userIdentity
-	userID := r.Context().Value(userIDkey).(int)
+	userID := ctx.Value(userIDkey).(int)
 	// получаем все withdraw юзера из БД
-	userWithdrawals, err := h.services.GetUserWithdrawals(userID)
+	userWithdrawals, err := h.services.GetUserWithdrawals(ctx, userID)
 	if err != nil {
 		http.Error(w, "error get user withdrawals", http.StatusInternalServerError)
 		return

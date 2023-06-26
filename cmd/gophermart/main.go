@@ -35,7 +35,7 @@ func main() {
 		}
 	}()
 
-	storage := storage.NewStorage(ctx, db)
+	storage := storage.NewStorage(db)
 	services := service.NewService(storage)
 	handlers := handler.NewHandler(config, services, log)
 

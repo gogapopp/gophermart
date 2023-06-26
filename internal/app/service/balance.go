@@ -1,6 +1,8 @@
 package service
 
 import (
+	"context"
+
 	"github.com/gogapopp/gophermart/internal/app/models"
 	"github.com/gogapopp/gophermart/internal/app/storage"
 )
@@ -15,11 +17,11 @@ func NewUserBalanceService(storage storage.Balance) *UserBalance {
 }
 
 // UpdateUserBalanc передаёт данные на слой storage
-func (s *UserBalance) UpdateUserBalance(userID int, accrual float64) error {
-	return s.storage.UpdateUserBalance(userID, accrual)
+func (s *UserBalance) UpdateUserBalance(ctx context.Context, userID int, accrual float64) error {
+	return s.storage.UpdateUserBalance(ctx, userID, accrual)
 }
 
 // GetUserBalance передаёт данные на слой storage
-func (s *UserBalance) GetUserBalance(userID int) (models.Balance, error) {
-	return s.storage.GetUserBalance(userID)
+func (s *UserBalance) GetUserBalance(ctx context.Context, userID int) (models.Balance, error) {
+	return s.storage.GetUserBalance(ctx, userID)
 }

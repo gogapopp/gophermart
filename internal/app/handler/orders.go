@@ -16,8 +16,9 @@ import (
 
 // postUserOrdersHandler загружает номер заказа пользователя для расчёта
 func (h *Handler) postUserOrdersHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	// получаем userID из контекста который был установлен мидлвеером userIdentity
-	userID := r.Context().Value(userIDkey).(int)
+	userID := ctx.Value(userIDkey).(int)
 	// читаем бади пост запроса
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -58,7 +59,7 @@ func (h *Handler) postUserOrdersHandler(w http.ResponseWriter, r *http.Request) 
 		UploadedAt: time.Now().Format(time.RFC3339),
 	}
 	// проверяем есть ли у юзера ордер с таким номером
-	err = h.services.Orders.CheckUserOrder(userID, Order)
+	err = h.services.Orders.CheckUserOrder(ctx, userID, Order)
 	if err != nil {
 		switch {
 		case errors.Is(err, storage.ErrUserRepeatValue):
@@ -77,7 +78,7 @@ func (h *Handler) postUserOrdersHandler(w http.ResponseWriter, r *http.Request) 
 		Order.Status = "NEW"
 	}
 	// создаём ордер в бд
-	_, err = h.services.Orders.Create(userID, Order)
+	_, err = h.services.Orders.Create(ctx, userID, Order)
 	if err != nil {
 		if errors.Is(err, storage.ErrRepeatValue) {
 			http.Error(w, "order already exist", http.StatusConflict)
@@ -87,7 +88,7 @@ func (h *Handler) postUserOrdersHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	// обновляем баланс юзера (отправляем баллы лояльности которые нам расчитал сервис)
-	err = h.services.Balance.UpdateUserBalance(userID, Order.Accrual)
+	err = h.services.Balance.UpdateUserBalance(ctx, userID, Order.Accrual)
 	if err != nil {
 		http.Error(w, "error check user order", http.StatusInternalServerError)
 		return
@@ -97,10 +98,11 @@ func (h *Handler) postUserOrdersHandler(w http.ResponseWriter, r *http.Request) 
 
 // getUserOrdersHandler получает список загруженных пользователем номеров заказов, статусов их обработки и информации о начислениях
 func (h *Handler) getUserOrdersHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	// получаем userID из контекста который был установлен мидлвеером userIdentity
-	userID := r.Context().Value(userIDkey).(int)
+	userID := ctx.Value(userIDkey).(int)
 	// получаем из БД все ордеры юзера
-	orders, err := h.services.Orders.GetUserOrders(userID)
+	orders, err := h.services.Orders.GetUserOrders(ctx, userID)
 	if err != nil {
 		http.Error(w, ErrGetBalance.Error(), http.StatusInternalServerError)
 		return
