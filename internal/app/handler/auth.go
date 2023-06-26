@@ -10,6 +10,8 @@ import (
 	"github.com/gogapopp/gophermart/internal/app/storage"
 )
 
+// хорошей пркатикой является в именах хэндлеров на первое место ставить используемый метод
+// условно postRegisterUser, так в них проще ориентироваться, но тут дело вкуса
 // userRegisterPostHandler регистрирует пользователя
 func (h *Handler) userRegisterPostHandler(w http.ResponseWriter, r *http.Request) {
 	h.log.Info("POST /api/user/register")
@@ -57,6 +59,8 @@ func (h *Handler) userLoginPostHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "wrong login or password", http.StatusUnauthorized)
 			return
 		}
+		// И здесь и выше используюется одно сообщение об ошибки, для упрощения в таких случаях их можно вынеси отдельно как errors.New и
+		// переиспользовать в рахзных местах
 		http.Error(w, "error generate token", http.StatusInternalServerError)
 		return
 	}

@@ -6,6 +6,7 @@ type User struct {
 	Password string `json:"password"`
 }
 
+// А вот это используется где-то? Не могу найти
 type UserOrder struct {
 	ID      int
 	userID  int

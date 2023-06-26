@@ -143,6 +143,7 @@ func checksum(number int) int {
 	return luhn % 10
 }
 
+// А вот это лучше перенести в /models
 type RespOrder struct {
 	Number     string  `json:"order"`
 	Status     string  `json:"status"`

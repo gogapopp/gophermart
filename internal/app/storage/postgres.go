@@ -93,6 +93,8 @@ func NewDB(ctx context.Context, dsn string) (*sql.DB, error) {
 			order_id int references orders (id) on delete cascade
 		)
 	`)
+	// Rollback обычно вызывают тоже через defer
+	// Вообще можно посмотреть как оптимизировать транзакцию https://go.dev/doc/database/execute-transactions
 	if err != nil {
 		tx.Rollback()
 		return nil, err
