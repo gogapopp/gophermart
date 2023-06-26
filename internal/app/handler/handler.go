@@ -22,6 +22,7 @@ func NewHandler(services *service.Service, log *zap.SugaredLogger) *Handler {
 func (h *Handler) InitRoutes() *chi.Mux {
 	r := chi.NewRouter()
 
+	// Тут для удобства можно использовать Subrouters
 	r.Post("/api/user/register", h.userRegisterPostHandler)
 	r.Post("/api/user/login", h.userLoginPostHandler)
 	r.Post("/api/user/orders", h.userIdentity(h.userOrdersPostHandler))

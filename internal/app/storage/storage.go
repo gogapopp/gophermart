@@ -7,6 +7,7 @@ import (
 	"github.com/gogapopp/gophermart/internal/app/models"
 )
 
+// Использования одной структуры storage позволит и 1 интерфейс сдееать на все
 type Auth interface {
 	CreateUser(user models.User) (int, error)
 	GetUser(login, password string) (models.User, error)

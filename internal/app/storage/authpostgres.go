@@ -8,6 +8,7 @@ import (
 	"github.com/gogapopp/gophermart/internal/app/models"
 )
 
+// А почему не сделать общую структуру под storage? Везде передается одно и тоже
 type AuthPostgres struct {
 	ctx context.Context
 	db  *sql.DB

@@ -9,6 +9,7 @@ type UserBalance struct {
 	storage storage.Balance
 }
 
+// Не очень понятна этот функционал со "слоями", почему просто интерфейсы не подошли?
 // NewUserBalanceService создаёт структуру UserBalance
 func NewUserBalanceService(storage storage.Balance) *UserBalance {
 	return &UserBalance{storage: storage}

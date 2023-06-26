@@ -75,6 +75,9 @@ func (h *Handler) userBalanceWithdrawPostHanlder(w http.ResponseWriter, r *http.
 }
 
 func (h *Handler) userBalanceWithdrawalsGetHanlder(w http.ResponseWriter, r *http.Request) {
+	// Эти данные можно достать из самого реквеста
+	// r.Method
+	// r.Host
 	h.log.Info("GET /api/user/balance/withdrawals")
 	// получаем userID из контекста который был установлен мидлвеером userIdentity
 	userID := r.Context().Value(userIDkey).(int)

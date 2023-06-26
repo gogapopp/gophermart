@@ -10,6 +10,8 @@ type ctxKey string
 
 var userIDkey ctxKey = "userID"
 
+// Мидлвари удобнее хранить в отдельном пакете, как и роутер, при увелечении их количества удобнее будет ориентироваться
+
 // userIdentity иденцифицирует юзера по jwt токену в http заголовке
 func (h *Handler) userIdentity(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

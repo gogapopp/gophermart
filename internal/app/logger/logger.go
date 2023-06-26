@@ -4,6 +4,7 @@ import (
 	"go.uber.org/zap"
 )
 
+// В принципе и логгер можно при желание сделать мидлварью
 // NewLogger создаём логгер
 func NewLogger() (*zap.SugaredLogger, error) {
 	logger, err := zap.NewProduction()

@@ -9,6 +9,8 @@ import (
 	"go.uber.org/zap"
 )
 
+// А почему решил хранить структуру и инициализацию Server в директории `cmd`? Тут логичнее смотрится работа самого main и всяких config/init
+// Это не ошибка, тут на свое усмотрение, но просто интересна логика
 type Server struct {
 	httpServer *http.Server
 	log        *zap.SugaredLogger
