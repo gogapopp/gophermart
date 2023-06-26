@@ -5,29 +5,32 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gogapopp/gophermart/config"
+	"github.com/gogapopp/gophermart/internal/app/config"
 	"go.uber.org/zap"
 )
 
 type Server struct {
+	config     *config.Config
 	httpServer *http.Server
 	log        *zap.SugaredLogger
 }
 
 // NewServer возвращает структуру сервера
-func NewServer(log *zap.SugaredLogger) *Server {
-	return &Server{httpServer: &http.Server{}, log: log}
+func NewServer(config *config.Config, log *zap.SugaredLogger) *Server {
+	return &Server{config: config, httpServer: &http.Server{}, log: log}
 }
 
 // Run запускает сервер
 func (s *Server) Run(handler http.Handler) error {
 	s.httpServer = &http.Server{
-		Addr:         config.RunAddr,
-		Handler:      handler,
-		ReadTimeout:  10 * time.Second,
-		WriteTimeout: 10 * time.Second,
+		Addr:           s.config.RunAddr,
+		Handler:        handler,
+		ReadTimeout:    10 * time.Second,
+		WriteTimeout:   10 * time.Second,
+		IdleTimeout:    120 * time.Second,
+		MaxHeaderBytes: 1 << 20,
 	}
-	s.log.Info("run server at address: ", config.RunAddr)
+	s.log.Info("run server at address: ", s.config.RunAddr)
 	return s.httpServer.ListenAndServe()
 }
 

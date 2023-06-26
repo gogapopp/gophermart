@@ -10,17 +10,17 @@ import (
 	"github.com/gogapopp/gophermart/internal/app/storage"
 )
 
-// userRegisterPostHandler регистрирует пользователя
-func (h *Handler) userRegisterPostHandler(w http.ResponseWriter, r *http.Request) {
-	h.log.Info("POST /api/user/register")
+// postUserRegisterHandler регистрирует пользователя
+func (h *Handler) postUserRegisterHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	// декодируем боди пост запроса
 	var req models.User
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "error decoding request body", http.StatusBadRequest)
+		http.Error(w, ErrDecodingReq.Error(), http.StatusBadRequest)
 		return
 	}
 	// отправляем запрос в бд на создание юзера
-	_, err := h.services.Auth.CreateUser(req)
+	_, err := h.services.Auth.CreateUser(ctx, req)
 	if err != nil {
 		if errors.As(err, &pgErr) {
 			http.Error(w, "user already exists", http.StatusConflict)
@@ -30,9 +30,9 @@ func (h *Handler) userRegisterPostHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 	// получает jwt токен
-	token, err := h.services.Auth.GenerateToken(req.Login, req.Password)
+	token, err := h.services.Auth.GenerateToken(ctx, req.Login, req.Password)
 	if err != nil {
-		http.Error(w, "error generate token", http.StatusInternalServerError)
+		http.Error(w, ErrGenerateToken.Error(), http.StatusInternalServerError)
 		return
 	}
 	// записываем jwt токен в http заголовок
@@ -41,23 +41,23 @@ func (h *Handler) userRegisterPostHandler(w http.ResponseWriter, r *http.Request
 	w.WriteHeader(http.StatusOK)
 }
 
-// userLoginPostHandler аутентифицирует пользователя
-func (h *Handler) userLoginPostHandler(w http.ResponseWriter, r *http.Request) {
-	h.log.Info("POST /api/user/login")
+// postUserLoginHandler аутентифицирует пользователя
+func (h *Handler) postUserLoginHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	// декодируем боди пост запроса
 	var req models.User
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "error decoding request body", http.StatusBadRequest)
+		http.Error(w, ErrDecodingReq.Error(), http.StatusBadRequest)
 		return
 	}
 	// получаем jwt токен (внутри GenerateToken шлём запрос на получение информации о юзере)
-	token, err := h.services.Auth.GenerateToken(req.Login, req.Password)
+	token, err := h.services.Auth.GenerateToken(ctx, req.Login, req.Password)
 	if err != nil {
 		if errors.Is(err, storage.ErrNoRows) {
 			http.Error(w, "wrong login or password", http.StatusUnauthorized)
 			return
 		}
-		http.Error(w, "error generate token", http.StatusInternalServerError)
+		http.Error(w, ErrGenerateToken.Error(), http.StatusInternalServerError)
 		return
 	}
 	// записываем jwt токен в http заголовок

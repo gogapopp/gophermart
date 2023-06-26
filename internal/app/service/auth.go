@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"crypto/sha256"
 	"fmt"
 	"time"
@@ -30,14 +31,14 @@ func NewAuthService(storage storage.Auth) *AuthService {
 }
 
 // CreateUser хеширует пароль который передал юзер и передаёт дальше на слой storage
-func (s *AuthService) CreateUser(user models.User) (int, error) {
+func (s *AuthService) CreateUser(ctx context.Context, user models.User) (int, error) {
 	user.Password = generatePasswordHash(user.Password)
-	return s.storage.CreateUser(user)
+	return s.storage.CreateUser(ctx, user)
 }
 
 // GenerateToken создаёт юзера и токен авторизации
-func (s *AuthService) GenerateToken(login, password string) (string, error) {
-	user, err := s.storage.GetUser(login, generatePasswordHash(password))
+func (s *AuthService) GenerateToken(ctx context.Context, login, password string) (string, error) {
+	user, err := s.storage.GetUser(ctx, login, generatePasswordHash(password))
 	if err != nil {
 		return "", err
 	}

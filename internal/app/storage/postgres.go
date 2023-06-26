@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/gogapopp/gophermart/config"
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
@@ -18,7 +17,7 @@ const (
 
 // NewDB создаёт таблицы и индексы
 func NewDB(ctx context.Context, dsn string) (*sql.DB, error) {
-	db, err := sql.Open("pgx", config.DatabaseURI)
+	db, err := sql.Open("pgx", dsn)
 	if err != nil {
 		return nil, err
 	}
@@ -32,6 +31,7 @@ func NewDB(ctx context.Context, dsn string) (*sql.DB, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer tx.Rollback()
 
 	_, err = tx.ExecContext(ctx, `
 		CREATE TABLE IF NOT EXISTS users (
@@ -41,7 +41,6 @@ func NewDB(ctx context.Context, dsn string) (*sql.DB, error) {
 		)
 	`)
 	if err != nil {
-		tx.Rollback()
 		return nil, err
 	}
 
@@ -55,7 +54,6 @@ func NewDB(ctx context.Context, dsn string) (*sql.DB, error) {
 		)
 	`)
 	if err != nil {
-		tx.Rollback()
 		return nil, err
 	}
 
@@ -68,7 +66,6 @@ func NewDB(ctx context.Context, dsn string) (*sql.DB, error) {
 		)
 	`)
 	if err != nil {
-		tx.Rollback()
 		return nil, err
 	}
 
@@ -82,7 +79,6 @@ func NewDB(ctx context.Context, dsn string) (*sql.DB, error) {
 		)
 	`)
 	if err != nil {
-		tx.Rollback()
 		return nil, err
 	}
 
@@ -94,19 +90,16 @@ func NewDB(ctx context.Context, dsn string) (*sql.DB, error) {
 		)
 	`)
 	if err != nil {
-		tx.Rollback()
 		return nil, err
 	}
 
 	_, err = tx.ExecContext(ctx, "CREATE UNIQUE INDEX IF NOT EXISTS login_id ON users(login)")
 	if err != nil {
-		tx.Rollback()
 		return nil, err
 	}
 
 	_, err = tx.ExecContext(ctx, "CREATE UNIQUE INDEX IF NOT EXISTS order_id ON orders(number)")
 	if err != nil {
-		tx.Rollback()
 		return nil, err
 	}
 

@@ -10,19 +10,19 @@ import (
 	"time"
 
 	"github.com/go-resty/resty/v2"
-	"github.com/gogapopp/gophermart/config"
 	"github.com/gogapopp/gophermart/internal/app/models"
 	"github.com/gogapopp/gophermart/internal/app/storage"
 )
 
-// userOrdersPostHandler загружает номер заказа пользователя для расчёта
-func (h *Handler) userOrdersPostHandler(w http.ResponseWriter, r *http.Request) {
+// postUserOrdersHandler загружает номер заказа пользователя для расчёта
+func (h *Handler) postUserOrdersHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	// получаем userID из контекста который был установлен мидлвеером userIdentity
-	userID := r.Context().Value(userIDkey).(int)
+	userID := ctx.Value(userIDkey).(int)
 	// читаем бади пост запроса
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		http.Error(w, "error read body", http.StatusInternalServerError)
+		http.Error(w, ErrReadBody.Error(), http.StatusInternalServerError)
 		return
 	}
 	// прочитаный номер из запроса конвертируем в int
@@ -33,19 +33,20 @@ func (h *Handler) userOrdersPostHandler(w http.ResponseWriter, r *http.Request) 
 	}
 	// проверяем валидность с помощью алгоритма Луна
 	if ok := Valid(number); !ok {
-		http.Error(w, "unvalid order number", http.StatusUnprocessableEntity)
+		http.Error(w, ErrUnvalidNumb.Error(), http.StatusUnprocessableEntity)
 		return
 	}
 	// отправляем запрос на сервер расчёта баллов и получаем структуру
-	order, err := OrderReq(number)
+	order, err := OrderReq(h.config.AccSysAddr, number)
 	if err != nil {
-		if errors.As(err, &pgErr) {
+		switch {
+		case errors.As(err, &pgErr):
 			http.Error(w, "order already exists", http.StatusConflict)
 			return
-		} else if errors.Is(err, ErrTooManyRequests) {
+		case errors.Is(err, ErrTooManyRequests):
 			http.Error(w, "too many requests", http.StatusTooManyRequests)
 			return
-		} else {
+		default:
 			http.Error(w, "service reject", http.StatusInternalServerError)
 			return
 		}
@@ -58,25 +59,26 @@ func (h *Handler) userOrdersPostHandler(w http.ResponseWriter, r *http.Request) 
 		UploadedAt: time.Now().Format(time.RFC3339),
 	}
 	// проверяем есть ли у юзера ордер с таким номером
-	err = h.services.Orders.CheckUserOrder(userID, Order)
+	err = h.services.Orders.CheckUserOrder(ctx, userID, Order)
 	if err != nil {
-		fmt.Println(err)
-		if errors.Is(err, storage.ErrUserRepeatValue) {
+		switch {
+		case errors.Is(err, storage.ErrUserRepeatValue):
 			http.Error(w, "user order already exist", http.StatusOK)
 			return
-		} else if errors.Is(err, storage.ErrRepeatValue) {
+		case errors.Is(err, storage.ErrRepeatValue):
 			http.Error(w, "order already exist", http.StatusConflict)
 			return
+		default:
+			http.Error(w, "error check user order", http.StatusInternalServerError)
+			return
 		}
-		http.Error(w, "error check user order", http.StatusInternalServerError)
-		return
 	}
 	// если сервис вернул пустой order.status ставим ему значение "NEW"
 	if len(Order.Status) < 1 {
 		Order.Status = "NEW"
 	}
 	// создаём ордер в бд
-	_, err = h.services.Orders.Create(userID, Order)
+	_, err = h.services.Orders.Create(ctx, userID, Order)
 	if err != nil {
 		if errors.Is(err, storage.ErrRepeatValue) {
 			http.Error(w, "order already exist", http.StatusConflict)
@@ -86,7 +88,7 @@ func (h *Handler) userOrdersPostHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	// обновляем баланс юзера (отправляем баллы лояльности которые нам расчитал сервис)
-	err = h.services.Balance.UpdateUserBalance(userID, Order.Accrual)
+	err = h.services.Balance.UpdateUserBalance(ctx, userID, Order.Accrual)
 	if err != nil {
 		http.Error(w, "error check user order", http.StatusInternalServerError)
 		return
@@ -94,15 +96,15 @@ func (h *Handler) userOrdersPostHandler(w http.ResponseWriter, r *http.Request) 
 	w.WriteHeader(http.StatusAccepted)
 }
 
-// userOrdersGetHandler  получает список загруженных пользователем номеров заказов, статусов их обработки и информации о начислениях
-func (h *Handler) userOrdersGetHandler(w http.ResponseWriter, r *http.Request) {
-	h.log.Info("GET /api/user/orders")
+// getUserOrdersHandler получает список загруженных пользователем номеров заказов, статусов их обработки и информации о начислениях
+func (h *Handler) getUserOrdersHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	// получаем userID из контекста который был установлен мидлвеером userIdentity
-	userID := r.Context().Value(userIDkey).(int)
+	userID := ctx.Value(userIDkey).(int)
 	// получаем из БД все ордеры юзера
-	orders, err := h.services.Orders.GetUserOrders(userID)
+	orders, err := h.services.Orders.GetUserOrders(ctx, userID)
 	if err != nil {
-		http.Error(w, "error get user orders", http.StatusInternalServerError)
+		http.Error(w, ErrGetBalance.Error(), http.StatusInternalServerError)
 		return
 	}
 	// проверяем есть ли ордеры у юзера
@@ -114,7 +116,7 @@ func (h *Handler) userOrdersGetHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	if err := json.NewEncoder(w).Encode(orders); err != nil {
-		http.Error(w, "error encoding response", http.StatusInternalServerError)
+		http.Error(w, ErrEncogingResp.Error(), http.StatusInternalServerError)
 		return
 	}
 }
@@ -143,18 +145,11 @@ func checksum(number int) int {
 	return luhn % 10
 }
 
-type RespOrder struct {
-	Number     string  `json:"order"`
-	Status     string  `json:"status"`
-	Accrual    float64 `json:"accrual"`
-	UploadedAt string  `json:"uploaded_at"`
-}
-
 // OrderReq отправляет запрос на сервис расчёта баллов
-func OrderReq(number int) (RespOrder, error) {
-	var Order RespOrder
+func OrderReq(accsysaddr string, number int) (models.RespOrder, error) {
+	var Order models.RespOrder
 	client := resty.New()
-	url := fmt.Sprintf("%s/api/orders/%d", config.AccSysAddr, number)
+	url := fmt.Sprintf("%s/api/orders/%d", accsysaddr, number)
 
 	resp, err := client.R().Get(url)
 	if err != nil {
@@ -164,7 +159,7 @@ func OrderReq(number int) (RespOrder, error) {
 	if resp.StatusCode() == http.StatusOK {
 		err = json.Unmarshal(resp.Body(), &Order)
 		if err != nil {
-			return Order, err
+			return Order, ErrUnmarshal
 		}
 	} else if resp.StatusCode() == http.StatusTooManyRequests {
 		return Order, ErrTooManyRequests

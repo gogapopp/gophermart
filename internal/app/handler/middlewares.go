@@ -10,7 +10,7 @@ type ctxKey string
 
 var userIDkey ctxKey = "userID"
 
-// userIdentity иденцифицирует юзера по jwt токену в http заголовке
+// UserIdentity иденцифицирует юзера по jwt токену в http заголовке
 func (h *Handler) userIdentity(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		header := r.Header.Get("Authorization")
